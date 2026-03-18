@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vault_db
+    environment:
+      POSTGRES_DB:       vault_saas
+      POSTGRES_USER:     vault_user
+      POSTGRES_PASSWORD: vault_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - vault_pgdata:/var/lib/postgresql/data
+      - ./backend/migrations/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U vault_user -d vault_saas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vault_api
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://vault_user:vault_secret@postgres:5432/vault_saas
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: vault_web
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: vault_mail
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    restart: unless-stopped
+
+volumes:
+  vault_pgdata:
