@@ -1,887 +1,1732 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vault — Secure Credential Manager</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg:#0d0f12;--surface:#13161c;--surface2:#1a1e27;--surface3:#222736;
-  --border:#252b3a;--border2:#2e3648;
-  --gold:#f0c040;--gold2:#ffd97a;--green:#3dd68c;--red:#ff5f5f;
-  --blue:#5b9cf6;--purple:#a78bfa;--orange:#fb923c;
-  --text:#c8d0e0;--dim:#5c6680;--bright:#edf0f7;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif}
-a{color:var(--gold);text-decoration:none}
-a:hover{text-decoration:underline}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault — Secure Credential Manager</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --surface: #13161c;
+      --surface2: #1a1e27;
+      --surface3: #222736;
+      --border: #252b3a;
+      --border2: #2e3648;
+      --gold: #f0c040;
+      --gold2: #ffd97a;
+      --green: #3dd68c;
+      --red: #ff5f5f;
+      --blue: #5b9cf6;
+      --purple: #a78bfa;
+      --orange: #fb923c;
+      --text: #c8d0e0;
+      --dim: #5c6680;
+      --bright: #edf0f7;
+    }
 
-/* ── LAYOUT ── */
-#app{min-height:100vh;display:flex;flex-direction:column}
-.page{display:none;min-height:100vh}
-.page.active{display:flex}
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* ── AUTH PAGES ── */
-.auth-wrap{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  padding:24px;background:var(--bg);
-  background-image:radial-gradient(ellipse at 20% 50%,rgba(240,192,64,.05) 0%,transparent 60%),
-                   radial-gradient(ellipse at 80% 50%,rgba(91,156,246,.05) 0%,transparent 60%);
-}
-.auth-card{
-  width:100%;max-width:420px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;padding:40px;
-  box-shadow:0 40px 80px rgba(0,0,0,.5);
-}
-.auth-logo{text-align:center;margin-bottom:28px}
-.auth-logo .icon{font-size:36px;display:block;margin-bottom:8px}
-.auth-logo h1{font-size:24px;font-weight:800;color:var(--bright);letter-spacing:-.02em}
-.auth-logo h1 span{color:var(--gold)}
-.auth-logo p{font-size:13px;color:var(--dim);margin-top:4px}
-.auth-tab-row{display:flex;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px}
-.auth-tab{flex:1;padding:8px;border:none;border-radius:7px;background:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--dim);transition:all .2s}
-.auth-tab.active{background:var(--surface3);color:var(--bright)}
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif
+    }
 
-/* ── FORM ── */
-.form-group{margin-bottom:16px}
-.form-label{display:block;font-size:12px;font-weight:600;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
-.form-input{
-  width:100%;padding:11px 14px;
-  background:var(--surface2);border:1px solid var(--border2);
-  border-radius:9px;font-size:14px;color:var(--bright);
-  font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;
-}
-.form-input:focus{border-color:var(--gold)}
-.form-input.mono{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.04em}
-.input-row{display:flex;gap:8px;align-items:flex-start}
-.input-row .form-input{flex:1}
-.eye-btn{
-  flex-shrink:0;width:42px;height:42px;
-  background:var(--surface2);border:1px solid var(--border2);
-  border-radius:9px;cursor:pointer;color:var(--dim);font-size:15px;
-  display:flex;align-items:center;justify-content:center;transition:all .15s;
-}
-.eye-btn:hover{border-color:var(--gold);color:var(--gold)}
+    a {
+      color: var(--gold);
+      text-decoration: none
+    }
 
-.btn{
-  width:100%;padding:12px;border:none;border-radius:9px;
-  font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;
-  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.btn-primary{background:var(--gold);color:#0d0f12}
-.btn-primary:hover{background:var(--gold2)}
-.btn-primary:disabled{background:var(--border2);color:var(--dim);cursor:not-allowed}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
-.btn-ghost:hover{border-color:var(--text-dim)}
-.btn-danger{background:rgba(255,95,95,.12);color:var(--red);border:1px solid rgba(255,95,95,.3)}
-.btn-sm{width:auto;padding:7px 16px;font-size:12px}
+    a:hover {
+      text-decoration: underline
+    }
 
-.strength-bar-wrap{height:4px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden}
-.strength-bar-fill{height:100%;border-radius:2px;transition:width .3s,background .3s}
-.strength-label{font-size:11px;font-family:'DM Mono',monospace;margin-top:4px}
+    /* ── LAYOUT ── */
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column
+    }
 
-.otp-inputs{display:flex;gap:10px;justify-content:center;margin:20px 0}
-.otp-digit{
-  width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;
-  background:var(--surface2);border:1px solid var(--border2);border-radius:10px;
-  color:var(--bright);font-family:'DM Mono',monospace;outline:none;
-  transition:border-color .2s;
-}
-.otp-digit:focus{border-color:var(--gold)}
+    .page {
+      display: none;
+      min-height: 100vh
+    }
 
-.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--dim);font-size:12px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.error-msg{color:var(--red);font-size:12px;font-family:'DM Mono',monospace;margin-top:10px;min-height:18px;text-align:center}
-.success-msg{color:var(--green);font-size:12px;font-family:'DM Mono',monospace;margin-top:10px;text-align:center}
-.info-box{
-  background:rgba(240,192,64,.06);border:1px solid rgba(240,192,64,.2);
-  border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;margin:16px 0;
-}
-.warn-box{
-  background:rgba(255,95,95,.06);border:1px solid rgba(255,95,95,.2);
-  border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;margin:16px 0;color:#ff8080;
-}
-.recovery-box{
-  background:var(--surface2);border:1px solid rgba(61,214,140,.3);
-  border-radius:10px;padding:16px;text-align:center;
-  font-family:'DM Mono',monospace;font-size:13px;color:var(--green);
-  letter-spacing:3px;word-break:break-all;margin:16px 0;
-}
-.method-select{display:flex;gap:10px;margin-bottom:20px}
-.method-btn{
-  flex:1;padding:14px 10px;border:1px solid var(--border2);border-radius:10px;
-  background:none;cursor:pointer;font-family:'Outfit',sans-serif;
-  font-size:13px;font-weight:600;color:var(--dim);text-align:center;
-  transition:all .2s;
-}
-.method-btn .emoji{display:block;font-size:24px;margin-bottom:6px}
-.method-btn:hover,.method-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(240,192,64,.06)}
+    .page.active {
+      display: flex
+    }
 
-/* ── VAULT APP ── */
-#vault-page{flex-direction:row}
-#sidebar{
-  width:240px;flex-shrink:0;background:var(--surface);
-  border-right:1px solid var(--border);display:flex;flex-direction:column;
-  min-height:100vh;
-}
-.brand{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.brand-icon{font-size:22px}
-.brand-name{font-size:17px;font-weight:800;color:var(--bright)}
-.brand-name span{color:var(--gold)}
-.user-info{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;color:var(--dim);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sidebar-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:14px 16px 6px;display:block}
-.cat-btn{
-  display:flex;align-items:center;gap:10px;width:100%;padding:9px 16px;
-  border:none;background:none;cursor:pointer;font-family:'Outfit',sans-serif;
-  font-size:13px;font-weight:500;color:var(--dim);text-align:left;
-  border-left:3px solid transparent;transition:all .15s;
-}
-.cat-btn:hover{background:var(--surface2);color:var(--text)}
-.cat-btn.active{background:rgba(240,192,64,.08);color:var(--gold);border-left-color:var(--gold)}
-.cat-count{margin-left:auto;font-size:10px;font-family:'DM Mono',monospace;background:var(--surface3);padding:2px 7px;border-radius:10px}
-.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border)}
-.side-btn{
-  display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;
-  border:none;background:none;cursor:pointer;font-family:'Outfit',sans-serif;
-  font-size:12px;font-weight:500;color:var(--dim);border-radius:7px;transition:all .15s;
-}
-.side-btn:hover{background:var(--surface2);color:var(--text)}
-.side-btn.red:hover{color:var(--red)}
+    /* ── AUTH PAGES ── */
+    .auth-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(240, 192, 64, .05) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(91, 156, 246, .05) 0%, transparent 60%);
+    }
 
-/* ── MAIN ── */
-#vault-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:100vh}
-.topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
-.search-wrap{flex:1;position:relative}
-.search-wrap input{
-  width:100%;padding:9px 14px 9px 36px;
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;font-size:13px;color:var(--bright);
-  font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;
-}
-.search-wrap input:focus{border-color:var(--gold)}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--dim)}
-.add-btn{padding:9px 18px;background:var(--gold);border:none;border-radius:8px;font-size:13px;font-weight:700;color:#0d0f12;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;transition:background .2s}
-.add-btn:hover{background:var(--gold2)}
-.lock-topbtn{padding:9px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;font-size:12px;color:var(--dim);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
-.lock-topbtn:hover{border-color:var(--red);color:var(--red)}
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, .5);
+    }
 
-#vault-list{flex:1;overflow-y:auto;padding:24px}
-.sec-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
-.entry-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin-bottom:24px}
-.entry-card{
-  background:var(--surface);border:1px solid var(--border);border-radius:10px;
-  padding:14px;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .15s;
-  position:relative;overflow:hidden;
-}
-.entry-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cc,var(--border));opacity:0;transition:opacity .2s}
-.entry-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.entry-card:hover::before{opacity:1}
-.card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
-.card-avatar{width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.card-meta{flex:1;min-width:0}
-.card-name{font-size:14px;font-weight:600;color:var(--bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-sub{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-acts{display:flex;gap:4px;opacity:0;transition:opacity .2s}
-.entry-card:hover .card-acts{opacity:1}
-.ico-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--dim);transition:all .15s}
-.ico-btn:hover{border-color:var(--gold);color:var(--gold)}
-.ico-btn.del:hover{border-color:var(--red);color:var(--red)}
-.card-secret{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:6px;padding:6px 10px}
-.secret-val{flex:1;font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.secret-val.show{color:var(--bright)}
-.reveal-btn{background:none;border:none;cursor:pointer;color:var(--dim);font-size:10px;font-family:'DM Mono',monospace;padding:2px 5px;border-radius:3px;transition:color .15s;white-space:nowrap}
-.reveal-btn:hover{color:var(--gold)}
-.copy-btn2{background:none;border:none;cursor:pointer;color:var(--dim);font-size:12px;transition:color .15s}
-.copy-btn2:hover{color:var(--green)}
-.type-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:8px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 28px
+    }
 
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(4px)}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:480px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.6)}
-.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.modal-title{font-size:18px;font-weight:700;color:var(--bright)}
-.close-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--dim);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.close-btn:hover{border-color:var(--red);color:var(--red)}
-.type-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-.type-tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--dim);font-family:'Outfit',sans-serif;transition:all .15s}
-.type-tab.active{background:rgba(240,192,64,.1);border-color:var(--gold);color:var(--gold)}
-.gen-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
-.gen-opts{display:flex;gap:10px;flex-wrap:wrap}
-.gen-opt{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:pointer}
-.gen-opt input{accent-color:var(--gold)}
-.gen-opt input[type=range]{width:70px}
-.modal-foot{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
-.mfbtn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
-.mfbtn-ghost{background:none;border:1px solid var(--border2);color:var(--dim)}
-.mfbtn-ghost:hover{border-color:var(--text)}
-.mfbtn-primary{background:var(--gold);border:none;color:#0d0f12}
-.mfbtn-primary:hover{background:var(--gold2)}
+    .auth-logo .icon {
+      font-size: 36px;
+      display: block;
+      margin-bottom: 8px
+    }
 
-/* ── MASTER LOCK SCREEN ── */
-#master-lock{position:fixed;inset:0;background:var(--bg);z-index:800;display:none;align-items:center;justify-content:center}
-#master-lock.show{display:flex}
+    .auth-logo h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--bright);
+      letter-spacing: -.02em
+    }
 
-/* ── TOAST ── */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--bright);box-shadow:0 8px 24px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none}
-#toast.show{transform:translateY(0);opacity:1}
+    .auth-logo h1 span {
+      color: var(--gold)
+    }
 
-.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:#0d0f12;border-radius:50%;animation:spin .6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-</style>
+    .auth-logo p {
+      font-size: 13px;
+      color: var(--dim);
+      margin-top: 4px
+    }
+
+    .auth-tab-row {
+      display: flex;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+      gap: 4px
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 7px;
+      background: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dim);
+      transition: all .2s
+    }
+
+    .auth-tab.active {
+      background: var(--surface3);
+      color: var(--bright)
+    }
+
+    /* ── FORM ── */
+    .form-group {
+      margin-bottom: 16px
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      font-size: 14px;
+      color: var(--bright);
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--gold)
+    }
+
+    .form-input.mono {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .04em
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start
+    }
+
+    .input-row .form-input {
+      flex: 1
+    }
+
+    .eye-btn {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+
+    .eye-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold)
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #0d0f12
+    }
+
+    .btn-primary:hover {
+      background: var(--gold2)
+    }
+
+    .btn-primary:disabled {
+      background: var(--border2);
+      color: var(--dim);
+      cursor: not-allowed
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2)
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--text-dim)
+    }
+
+    .btn-danger {
+      background: rgba(255, 95, 95, .12);
+      color: var(--red);
+      border: 1px solid rgba(255, 95, 95, .3)
+    }
+
+    .btn-sm {
+      width: auto;
+      padding: 7px 16px;
+      font-size: 12px
+    }
+
+    .strength-bar-wrap {
+      height: 4px;
+      background: var(--surface3);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden
+    }
+
+    .strength-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .3s, background .3s
+    }
+
+    .strength-label {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      margin-top: 4px
+    }
+
+    .otp-inputs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0
+    }
+
+    .otp-digit {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      color: var(--bright);
+      font-family: 'DM Mono', monospace;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .otp-digit:focus {
+      border-color: var(--gold)
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--dim);
+      font-size: 12px
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    .error-msg {
+      color: var(--red);
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      margin-top: 10px;
+      min-height: 18px;
+      text-align: center
+    }
+
+    .success-msg {
+      color: var(--green);
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      margin-top: 10px;
+      text-align: center
+    }
+
+    .info-box {
+      background: rgba(240, 192, 64, .06);
+      border: 1px solid rgba(240, 192, 64, .2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 16px 0;
+    }
+
+    .warn-box {
+      background: rgba(255, 95, 95, .06);
+      border: 1px solid rgba(255, 95, 95, .2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 16px 0;
+      color: #ff8080;
+    }
+
+    .recovery-box {
+      background: var(--surface2);
+      border: 1px solid rgba(61, 214, 140, .3);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--green);
+      letter-spacing: 3px;
+      word-break: break-all;
+      margin: 16px 0;
+    }
+
+    .method-select {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px
+    }
+
+    .method-btn {
+      flex: 1;
+      padding: 14px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dim);
+      text-align: center;
+      transition: all .2s;
+    }
+
+    .method-btn .emoji {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px
+    }
+
+    .method-btn:hover,
+    .method-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(240, 192, 64, .06)
+    }
+
+    /* ── VAULT APP ── */
+    #vault-page {
+      flex-direction: row
+    }
+
+    #sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .brand {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .brand-icon {
+      font-size: 22px
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--bright)
+    }
+
+    .brand-name span {
+      color: var(--gold)
+    }
+
+    .user-info {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--dim);
+      font-family: 'DM Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 14px 16px 6px;
+      display: block
+    }
+
+    .cat-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dim);
+      text-align: left;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+    }
+
+    .cat-btn:hover {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .cat-btn.active {
+      background: rgba(240, 192, 64, .08);
+      color: var(--gold);
+      border-left-color: var(--gold)
+    }
+
+    .cat-count {
+      margin-left: auto;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      background: var(--surface3);
+      padding: 2px 7px;
+      border-radius: 10px
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border)
+    }
+
+    .side-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 10px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--dim);
+      border-radius: 7px;
+      transition: all .15s;
+    }
+
+    .side-btn:hover {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .side-btn.red:hover {
+      color: var(--red)
+    }
+
+    /* ── MAIN ── */
+    #vault-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 100vh
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface)
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--bright);
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--gold)
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--dim)
+    }
+
+    .add-btn {
+      padding: 9px 18px;
+      background: var(--gold);
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0d0f12;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      white-space: nowrap;
+      transition: background .2s
+    }
+
+    .add-btn:hover {
+      background: var(--gold2)
+    }
+
+    .lock-topbtn {
+      padding: 9px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--dim);
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all .15s
+    }
+
+    .lock-topbtn:hover {
+      border-color: var(--red);
+      color: var(--red)
+    }
+
+    #vault-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px
+    }
+
+    .sec-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 10px
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px
+    }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color .2s, transform .15s, box-shadow .15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entry-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--cc, var(--border));
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .entry-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .3)
+    }
+
+    .entry-card:hover::before {
+      opacity: 1
+    }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px
+    }
+
+    .card-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0
+    }
+
+    .card-meta {
+      flex: 1;
+      min-width: 0
+    }
+
+    .card-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--bright);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .card-sub {
+      font-size: 11px;
+      color: var(--dim);
+      font-family: 'DM Mono', monospace;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .card-acts {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .entry-card:hover .card-acts {
+      opacity: 1
+    }
+
+    .ico-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--dim);
+      transition: all .15s
+    }
+
+    .ico-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold)
+    }
+
+    .ico-btn.del:hover {
+      border-color: var(--red);
+      color: var(--red)
+    }
+
+    .card-secret {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 6px 10px
+    }
+
+    .secret-val {
+      flex: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .secret-val.show {
+      color: var(--bright)
+    }
+
+    .reveal-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      padding: 2px 5px;
+      border-radius: 3px;
+      transition: color .15s;
+      white-space: nowrap
+    }
+
+    .reveal-btn:hover {
+      color: var(--gold)
+    }
+
+    .copy-btn2 {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 12px;
+      transition: color .15s
+    }
+
+    .copy-btn2:hover {
+      color: var(--green)
+    }
+
+    .type-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 8px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      backdrop-filter: blur(4px)
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 28px;
+      width: 480px;
+      max-width: 96vw;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, .6)
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--bright)
+    }
+
+    .close-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      background: none;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s
+    }
+
+    .close-btn:hover {
+      border-color: var(--red);
+      color: var(--red)
+    }
+
+    .type-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 18px
+    }
+
+    .type-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--dim);
+      font-family: 'Outfit', sans-serif;
+      transition: all .15s
+    }
+
+    .type-tab.active {
+      background: rgba(240, 192, 64, .1);
+      border-color: var(--gold);
+      color: var(--gold)
+    }
+
+    .gen-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px
+    }
+
+    .gen-opts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .gen-opt {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--dim);
+      cursor: pointer
+    }
+
+    .gen-opt input {
+      accent-color: var(--gold)
+    }
+
+    .gen-opt input[type=range] {
+      width: 70px
+    }
+
+    .modal-foot {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      justify-content: flex-end
+    }
+
+    .mfbtn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all .2s
+    }
+
+    .mfbtn-ghost {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--dim)
+    }
+
+    .mfbtn-ghost:hover {
+      border-color: var(--text)
+    }
+
+    .mfbtn-primary {
+      background: var(--gold);
+      border: none;
+      color: #0d0f12
+    }
+
+    .mfbtn-primary:hover {
+      background: var(--gold2)
+    }
+
+    /* ── MASTER LOCK SCREEN ── */
+    #master-lock {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 800;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    #master-lock.show {
+      display: flex
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--bright);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s cubic-bezier(.34, 1.56, .64, 1);
+      z-index: 9999;
+      pointer-events: none
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .2);
+      border-top-color: #0d0f12;
+      border-radius: 50%;
+      animation: spin .6s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+  </style>
 </head>
+
 <body>
-<div id="app">
+  <div id="app">
 
-<!-- ════ REGISTER / LOGIN PAGE ════ -->
-<div class="page active" id="auth-page">
-<div class="auth-wrap">
-<div class="auth-card">
-  <div class="auth-logo">
-    <span class="icon">🔐</span>
-    <h1>Va<span>ult</span></h1>
-    <p id="auth-subtitle">Secure credential manager</p>
-  </div>
+    <!-- ════ REGISTER / LOGIN PAGE ════ -->
+    <div class="page active" id="auth-page">
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <div class="auth-logo">
+            <span class="icon">🔐</span>
+            <h1>Va<span>ult</span></h1>
+            <p id="auth-subtitle">Secure credential manager</p>
+          </div>
 
-  <!-- REGISTER FORM -->
-  <div id="form-register">
-    <div class="auth-tab-row">
-      <button class="auth-tab" onclick="showAuthForm('login')">Sign In</button>
-      <button class="auth-tab active">Create Account</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <div class="input-row">
-        <input class="form-input" id="reg-password" type="password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="updateStrength(this.value,'reg-strength-fill','reg-strength-label')"/>
-        <button class="eye-btn" onclick="toggleEye('reg-password',this)">👁</button>
-      </div>
-      <div class="strength-bar-wrap"><div class="strength-bar-fill" id="reg-strength-fill" style="width:0"></div></div>
-      <div class="strength-label" id="reg-strength-label"></div>
-    </div>
-    <button class="btn btn-primary" id="reg-btn" onclick="register()">Create Account</button>
-    <div class="error-msg" id="reg-error"></div>
-  </div>
+          <!-- REGISTER FORM -->
+          <div id="form-register">
+            <div class="auth-tab-row">
+              <button class="auth-tab" onclick="showAuthForm('login')">Sign In</button>
+              <button class="auth-tab active">Create Account</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" id="reg-email" type="email" placeholder="you@example.com"
+                autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-row">
+                <input class="form-input" id="reg-password" type="password" placeholder="Min. 8 characters"
+                  autocomplete="new-password"
+                  oninput="updateStrength(this.value,'reg-strength-fill','reg-strength-label')" />
+                <button class="eye-btn" onclick="toggleEye('reg-password',this)">👁</button>
+              </div>
+              <div class="strength-bar-wrap">
+                <div class="strength-bar-fill" id="reg-strength-fill" style="width:0"></div>
+              </div>
+              <div class="strength-label" id="reg-strength-label"></div>
+            </div>
+            <button class="btn btn-primary" id="reg-btn" onclick="register()">Create Account</button>
+            <div class="error-msg" id="reg-error"></div>
+          </div>
 
-  <!-- LOGIN FORM -->
-  <div id="form-login" style="display:none">
-    <div class="auth-tab-row">
-      <button class="auth-tab active">Sign In</button>
-      <button class="auth-tab" onclick="showAuthForm('register')">Create Account</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <div class="input-row">
-        <input class="form-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password"/>
-        <button class="eye-btn" onclick="toggleEye('login-password',this)">👁</button>
-      </div>
-    </div>
-    <button class="btn btn-primary" id="login-btn" onclick="login()">Sign In</button>
-    <div class="error-msg" id="login-error"></div>
-    <div class="divider">or</div>
-    <div style="text-align:center;font-size:13px">
-      <a href="#" onclick="showAuthForm('forgot-pw')">Forgot password?</a>
-    </div>
-  </div>
+          <!-- LOGIN FORM -->
+          <div id="form-login" style="display:none">
+            <div class="auth-tab-row">
+              <button class="auth-tab active">Sign In</button>
+              <button class="auth-tab" onclick="showAuthForm('register')">Create Account</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" id="login-email" type="email" placeholder="you@example.com"
+                autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-row">
+                <input class="form-input" id="login-password" type="password" placeholder="Your password"
+                  autocomplete="current-password" />
+                <button class="eye-btn" onclick="toggleEye('login-password',this)">👁</button>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="login-btn" onclick="login()">Sign In</button>
+            <div class="error-msg" id="login-error"></div>
+            <div class="divider">or</div>
+            <div style="text-align:center;font-size:13px">
+              <a href="#" onclick="showAuthForm('forgot-pw')">Forgot password?</a>
+            </div>
+          </div>
 
-  <!-- VERIFY EMAIL -->
-  <div id="form-verify-email" style="display:none">
-    <div class="info-box">📧 We sent a 6-digit code to <strong id="verify-email-display"></strong>. Enter it below.</div>
-    <div class="otp-inputs" id="verify-otp-inputs"></div>
-    <button class="btn btn-primary" id="verify-btn" onclick="verifyEmail()">Verify Email</button>
-    <div class="error-msg" id="verify-error"></div>
-    <div style="text-align:center;margin-top:14px;font-size:13px">
-      <a href="#" onclick="resendVerification()">Resend code</a>
-    </div>
-  </div>
+          <!-- VERIFY EMAIL -->
+          <div id="form-verify-email" style="display:none">
+            <div class="info-box">📧 We sent a 6-digit code to <strong id="verify-email-display"></strong>. Enter it
+              below.</div>
+            <div class="otp-inputs" id="verify-otp-inputs"></div>
+            <button class="btn btn-primary" id="verify-btn" onclick="verifyEmail()">Verify Email</button>
+            <div class="error-msg" id="verify-error"></div>
+            <div style="text-align:center;margin-top:14px;font-size:13px">
+              <a href="#" onclick="resendVerification()">Resend code</a>
+            </div>
+          </div>
 
-  <!-- 2FA STEP -->
-  <div id="form-2fa" style="display:none">
-    <p style="font-size:14px;margin-bottom:16px;color:var(--text)">Two-factor authentication required</p>
-    <div class="method-select" id="method-select"></div>
-    <div id="twofa-email-section" style="display:none">
-      <div class="info-box">📧 Check your email for a 6-digit code.</div>
-      <div class="otp-inputs" id="twofa-otp-inputs"></div>
-    </div>
-    <div id="twofa-totp-section" style="display:none">
-      <div class="info-box">📱 Enter the code from your authenticator app.</div>
-      <div class="otp-inputs" id="twofa-totp-inputs"></div>
-    </div>
-    <button class="btn btn-primary" id="twofa-btn" onclick="verify2FA()">Verify</button>
-    <div class="error-msg" id="twofa-error"></div>
-  </div>
+          <!-- 2FA STEP -->
+          <div id="form-2fa" style="display:none">
+            <p style="font-size:14px;margin-bottom:16px;color:var(--text)">Two-factor authentication required</p>
+            <div class="method-select" id="method-select"></div>
+            <div id="twofa-email-section" style="display:none">
+              <div class="info-box">📧 Check your email for a 6-digit code.</div>
+              <div class="otp-inputs" id="twofa-otp-inputs"></div>
+            </div>
+            <div id="twofa-totp-section" style="display:none">
+              <div class="info-box">📱 Enter the code from your authenticator app.</div>
+              <div class="otp-inputs" id="twofa-totp-inputs"></div>
+            </div>
+            <button class="btn btn-primary" id="twofa-btn" onclick="verify2FA()">Verify</button>
+            <div class="error-msg" id="twofa-error"></div>
+          </div>
 
-  <!-- FORGOT LOGIN PASSWORD -->
-  <div id="form-forgot-pw" style="display:none">
-    <h3 style="font-size:16px;font-weight:700;color:var(--bright);margin-bottom:16px">Reset Login Password</h3>
-    <div id="forgot-step1">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" id="forgot-email" type="email" placeholder="you@example.com"/>
-      </div>
-      <button class="btn btn-primary" onclick="forgotPasswordStep1()">Send Reset Code</button>
-    </div>
-    <div id="forgot-step2" style="display:none">
-      <div class="info-box">📧 Enter the reset code sent to your email.</div>
-      <div class="otp-inputs" id="forgot-otp-inputs"></div>
-      <div class="form-group" style="margin-top:16px">
-        <label class="form-label">New Password</label>
-        <div class="input-row">
-          <input class="form-input" id="forgot-newpw" type="password" placeholder="New password" oninput="updateStrength(this.value,'forgot-strength-fill','forgot-strength-label')"/>
-          <button class="eye-btn" onclick="toggleEye('forgot-newpw',this)">👁</button>
+          <!-- FORGOT LOGIN PASSWORD -->
+          <div id="form-forgot-pw" style="display:none">
+            <h3 style="font-size:16px;font-weight:700;color:var(--bright);margin-bottom:16px">Reset Login Password</h3>
+            <div id="forgot-step1">
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" id="forgot-email" type="email" placeholder="you@example.com" />
+              </div>
+              <button class="btn btn-primary" onclick="forgotPasswordStep1()">Send Reset Code</button>
+            </div>
+            <div id="forgot-step2" style="display:none">
+              <div class="info-box">📧 Enter the reset code sent to your email.</div>
+              <div class="otp-inputs" id="forgot-otp-inputs"></div>
+              <div class="form-group" style="margin-top:16px">
+                <label class="form-label">New Password</label>
+                <div class="input-row">
+                  <input class="form-input" id="forgot-newpw" type="password" placeholder="New password"
+                    oninput="updateStrength(this.value,'forgot-strength-fill','forgot-strength-label')" />
+                  <button class="eye-btn" onclick="toggleEye('forgot-newpw',this)">👁</button>
+                </div>
+                <div class="strength-bar-wrap">
+                  <div class="strength-bar-fill" id="forgot-strength-fill" style="width:0"></div>
+                </div>
+                <div class="strength-label" id="forgot-strength-label"></div>
+              </div>
+              <button class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
+            </div>
+            <div class="error-msg" id="forgot-error"></div>
+            <div class="success-msg" id="forgot-success"></div>
+            <div style="text-align:center;margin-top:14px;font-size:13px">
+              <a href="#" onclick="showAuthForm('login')">← Back to login</a>
+            </div>
+          </div>
+
         </div>
-        <div class="strength-bar-wrap"><div class="strength-bar-fill" id="forgot-strength-fill" style="width:0"></div></div>
-        <div class="strength-label" id="forgot-strength-label"></div>
-      </div>
-      <button class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
-    </div>
-    <div class="error-msg" id="forgot-error"></div>
-    <div class="success-msg" id="forgot-success"></div>
-    <div style="text-align:center;margin-top:14px;font-size:13px">
-      <a href="#" onclick="showAuthForm('login')">← Back to login</a>
-    </div>
-  </div>
-
-</div>
-</div>
-</div>
-
-<!-- ════ MASTER PASSWORD SETUP PAGE ════ -->
-<div class="page" id="master-setup-page">
-<div class="auth-wrap">
-<div class="auth-card">
-  <div class="auth-logo">
-    <span class="icon">🔑</span>
-    <h1>Set Master <span>Password</span></h1>
-    <p>This encrypts your vault. Never stored on our servers.</p>
-  </div>
-
-  <div id="master-setup-form">
-    <div class="warn-box">⚠️ Choose a strong master password. Your vault <strong>cannot be recovered</strong> without it or your Recovery Key.</div>
-    <div class="form-group">
-      <label class="form-label">Master Password</label>
-      <div class="input-row">
-        <input class="form-input" id="mp-password" type="password" placeholder="Choose a strong master password" oninput="updateStrength(this.value,'mp-strength-fill','mp-strength-label')"/>
-        <button class="eye-btn" onclick="toggleEye('mp-password',this)">👁</button>
-      </div>
-      <div class="strength-bar-wrap"><div class="strength-bar-fill" id="mp-strength-fill" style="width:0"></div></div>
-      <div class="strength-label" id="mp-strength-label"></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Confirm Master Password</label>
-      <input class="form-input" id="mp-confirm" type="password" placeholder="Confirm master password"/>
-    </div>
-    <button class="btn btn-primary" id="mp-setup-btn" onclick="setupMasterPassword()">Set Master Password</button>
-    <div class="error-msg" id="mp-error"></div>
-  </div>
-
-  <div id="master-recovery-display" style="display:none">
-    <div class="info-box">🛡️ <strong>Your Recovery Key</strong> — save this NOW before continuing.</div>
-    <div class="recovery-box" id="recovery-key-value"></div>
-    <div class="warn-box">
-      ⚠️ This key is shown <strong>once only</strong> and is NOT stored on our servers.<br>
-      Save it on paper or in a secure offline location.<br>
-      Without it, a lost master password = <strong>permanent vault loss</strong>.
-    </div>
-    <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
-        <input type="checkbox" id="recovery-confirmed" style="accent-color:var(--gold)"/>
-        I have saved my Recovery Key in a safe place
-      </label>
-    </div>
-    <button class="btn btn-primary" onclick="confirmRecovery()">I've Saved It — Enter Vault</button>
-  </div>
-</div>
-</div>
-</div>
-
-<!-- ════ MASTER UNLOCK SCREEN (overlay) ════ -->
-<div id="master-lock">
-<div class="auth-card" style="max-width:400px">
-  <div class="auth-logo">
-    <span class="icon">🔒</span>
-    <h1>Vault <span>Locked</span></h1>
-    <p id="master-lock-email"></p>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Master Password</label>
-    <div class="input-row">
-      <input class="form-input" id="master-unlock-input" type="password" placeholder="Enter master password"/>
-      <button class="eye-btn" onclick="toggleEye('master-unlock-input',this)">👁</button>
-    </div>
-  </div>
-  <button class="btn btn-primary" id="unlock-btn" onclick="unlockVault()">Unlock</button>
-  <div class="error-msg" id="unlock-error"></div>
-  <div class="divider">or</div>
-  <div style="text-align:center;font-size:13px">
-    <a href="#" onclick="showMasterReset()">Forgot master password?</a>
-  </div>
-
-  <!-- MASTER RESET INLINE -->
-  <div id="master-reset-section" style="display:none;margin-top:20px">
-    <div class="warn-box">⚠️ Resetting the master password requires re-encrypting your vault. If you don't have your Recovery Key, all entries will be deleted.</div>
-    <div id="master-reset-step1">
-      <button class="btn btn-ghost" onclick="sendMasterResetOTP()" style="margin-top:8px">Send Reset Code to Email</button>
-    </div>
-    <div id="master-reset-step2" style="display:none">
-      <div class="info-box" style="margin-top:12px">📧 Enter the code from your email.</div>
-      <div class="otp-inputs" id="master-reset-otp-inputs"></div>
-      <div class="form-group" style="margin-top:12px">
-        <label class="form-label">New Master Password</label>
-        <input class="form-input" id="master-reset-newpw" type="password" placeholder="New master password"/>
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:12px">
-        <input type="checkbox" id="clear-vault-check" style="accent-color:var(--red)"/>
-        <span style="color:var(--red)">I understand my vault will be cleared (no Recovery Key)</span>
-      </label>
-      <button class="btn btn-danger" onclick="resetMasterPassword()" style="margin-bottom:6px">Reset Master Password</button>
-    </div>
-    <div class="error-msg" id="master-reset-error"></div>
-  </div>
-</div>
-</div>
-
-<!-- ════ VAULT PAGE ════ -->
-<div class="page" id="vault-page">
-  <aside id="sidebar">
-    <div class="brand"><span class="brand-icon">🔐</span><span class="brand-name">Va<span>ult</span></span></div>
-    <div class="user-info" id="sidebar-email"></div>
-    <span class="sidebar-label">Categories</span>
-    <button class="cat-btn active" onclick="filterCat('all',this)"><span>🗂</span> All Items <span class="cat-count" id="cnt-all">0</span></button>
-    <button class="cat-btn" onclick="filterCat('password',this)"><span>🔑</span> Passwords <span class="cat-count" id="cnt-password">0</span></button>
-    <button class="cat-btn" onclick="filterCat('apikey',this)"><span>⚡</span> API Keys <span class="cat-count" id="cnt-apikey">0</span></button>
-    <button class="cat-btn" onclick="filterCat('ssh',this)"><span>🖧</span> SSH / Tokens <span class="cat-count" id="cnt-ssh">0</span></button>
-    <button class="cat-btn" onclick="filterCat('env',this)"><span>📄</span> Env Variables <span class="cat-count" id="cnt-env">0</span></button>
-    <span class="sidebar-label" style="margin-top:8px">Security</span>
-    <button class="cat-btn" onclick="showTOTPModal()"><span>📱</span> Setup Authenticator</button>
-    <div class="sidebar-bottom">
-      <button class="side-btn" onclick="lockMaster()">🔒 Lock Vault</button>
-      <button class="side-btn red" onclick="logout()">⏻ Sign Out</button>
-    </div>
-  </aside>
-  <div id="vault-main">
-    <div class="topbar">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="vault-search" placeholder="Search credentials… (Ctrl+K)" oninput="renderVault()" autocomplete="off"/>
-      </div>
-      <button class="add-btn" onclick="openEntryModal()">＋ Add Entry</button>
-      <button class="lock-topbtn" onclick="lockMaster()">🔒 Lock</button>
-    </div>
-    <div id="vault-list"></div>
-  </div>
-</div>
-
-<!-- ════ ENTRY MODAL ════ -->
-<div class="modal-overlay" id="entry-modal" style="display:none" onclick="if(event.target===this)closeEntryModal()">
-<div class="modal">
-  <div class="modal-head">
-    <span class="modal-title" id="entry-modal-title">Add Entry</span>
-    <button class="close-btn" onclick="closeEntryModal()">✕</button>
-  </div>
-  <div class="type-tabs" id="entry-type-tabs">
-    <button class="type-tab active" onclick="setEntryType('password',this)">🔑 Password</button>
-    <button class="type-tab" onclick="setEntryType('apikey',this)">⚡ API Key</button>
-    <button class="type-tab" onclick="setEntryType('ssh',this)">🖧 SSH/Token</button>
-    <button class="type-tab" onclick="setEntryType('env',this)">📄 Env Var</button>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Name / Title *</label>
-    <input class="form-input" id="e-name" placeholder="e.g. GitHub, AWS Production…"/>
-  </div>
-  <div class="form-group">
-    <label class="form-label" id="e-user-label">Username / Email</label>
-    <input class="form-input" id="e-user" placeholder="user@example.com"/>
-  </div>
-  <div class="form-group">
-    <label class="form-label" id="e-secret-label">Password / Secret *</label>
-    <div class="input-row">
-      <input class="form-input mono" type="password" id="e-secret" oninput="if(currentEntryType==='password')updateStrength(this.value,'e-strength-fill','e-strength-label')"/>
-      <button class="eye-btn" onclick="toggleEye('e-secret',this)">👁</button>
-    </div>
-    <div id="e-strength-wrap">
-      <div class="strength-bar-wrap"><div class="strength-bar-fill" id="e-strength-fill" style="width:0"></div></div>
-      <div class="strength-label" id="e-strength-label"></div>
-    </div>
-    <div class="gen-row" style="margin-top:8px">
-      <button class="btn btn-ghost btn-sm" onclick="fillGenerated()">⚡ Generate</button>
-      <div class="gen-opts">
-        <label class="gen-opt"><input type="checkbox" id="g-upper" checked> A-Z</label>
-        <label class="gen-opt"><input type="checkbox" id="g-num" checked> 0-9</label>
-        <label class="gen-opt"><input type="checkbox" id="g-sym" checked> !@#</label>
-        <label class="gen-opt"><input type="range" id="g-len" min="8" max="64" value="20"><span id="g-len-val"> 20</span></label>
       </div>
     </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label" id="e-url-label">URL / Service</label>
-    <input class="form-input" id="e-url" placeholder="https://github.com"/>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Notes</label>
-    <textarea class="form-input" id="e-notes" rows="3" placeholder="Optional notes…"></textarea>
-  </div>
-  <div class="modal-foot">
-    <button class="mfbtn mfbtn-ghost" onclick="closeEntryModal()">Cancel</button>
-    <button class="mfbtn mfbtn-primary" onclick="saveEntry()">Save Entry</button>
-  </div>
-</div>
-</div>
 
-<!-- ════ TOTP SETUP MODAL ════ -->
-<div class="modal-overlay" id="totp-modal" style="display:none" onclick="if(event.target===this)closeTOTPModal()">
-<div class="modal" style="max-width:400px">
-  <div class="modal-head">
-    <span class="modal-title">📱 Authenticator App Setup</span>
-    <button class="close-btn" onclick="closeTOTPModal()">✕</button>
-  </div>
-  <div id="totp-setup-content">
-    <p style="font-size:13px;color:var(--text);margin-bottom:16px">Scan this QR code with Google Authenticator, Authy, or any TOTP app.</p>
-    <div style="text-align:center;margin-bottom:16px">
-      <img id="totp-qr" src="" alt="QR Code" style="border-radius:10px;max-width:200px"/>
+    <!-- ════ MASTER PASSWORD SETUP PAGE ════ -->
+    <div class="page" id="master-setup-page">
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <div class="auth-logo">
+            <span class="icon">🔑</span>
+            <h1>Set Master <span>Password</span></h1>
+            <p>This encrypts your vault. Never stored on our servers.</p>
+          </div>
+
+          <div id="master-setup-form">
+            <div class="warn-box">⚠️ Choose a strong master password. Your vault <strong>cannot be recovered</strong>
+              without it or your Recovery Key.</div>
+            <div class="form-group">
+              <label class="form-label">Master Password</label>
+              <div class="input-row">
+                <input class="form-input" id="mp-password" type="password" placeholder="Choose a strong master password"
+                  oninput="updateStrength(this.value,'mp-strength-fill','mp-strength-label')" />
+                <button class="eye-btn" onclick="toggleEye('mp-password',this)">👁</button>
+              </div>
+              <div class="strength-bar-wrap">
+                <div class="strength-bar-fill" id="mp-strength-fill" style="width:0"></div>
+              </div>
+              <div class="strength-label" id="mp-strength-label"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Master Password</label>
+              <input class="form-input" id="mp-confirm" type="password" placeholder="Confirm master password" />
+            </div>
+            <button class="btn btn-primary" id="mp-setup-btn" onclick="setupMasterPassword()">Set Master
+              Password</button>
+            <div class="error-msg" id="mp-error"></div>
+          </div>
+
+          <div id="master-recovery-display" style="display:none">
+            <div class="info-box">🛡️ <strong>Your Recovery Key</strong> — save this NOW before continuing.</div>
+            <div class="recovery-box" id="recovery-key-value"></div>
+            <div class="warn-box">
+              ⚠️ This key is shown <strong>once only</strong> and is NOT stored on our servers.<br>
+              Save it on paper or in a secure offline location.<br>
+              Without it, a lost master password = <strong>permanent vault loss</strong>.
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+                <input type="checkbox" id="recovery-confirmed" style="accent-color:var(--gold)" />
+                I have saved my Recovery Key in a safe place
+              </label>
+            </div>
+            <button class="btn btn-primary" onclick="confirmRecovery()">I've Saved It — Enter Vault</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="info-box" style="font-size:12px">Can't scan? Manual key: <span class="form-input mono" id="totp-secret-text" style="display:inline;padding:2px 6px;font-size:11px"></span></div>
-    <div class="form-group" style="margin-top:16px">
-      <label class="form-label">Enter code to confirm</label>
-      <div class="otp-inputs" id="totp-confirm-inputs"></div>
+
+    <!-- ════ MASTER UNLOCK SCREEN (overlay) ════ -->
+    <div id="master-lock">
+      <div class="auth-card" style="max-width:400px">
+        <div class="auth-logo">
+          <span class="icon">🔒</span>
+          <h1>Vault <span>Locked</span></h1>
+          <p id="master-lock-email"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Master Password</label>
+          <div class="input-row">
+            <input class="form-input" id="master-unlock-input" type="password" placeholder="Enter master password" />
+            <button class="eye-btn" onclick="toggleEye('master-unlock-input',this)">👁</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="unlock-btn" onclick="unlockVault()">Unlock</button>
+        <div class="error-msg" id="unlock-error"></div>
+        <div class="divider">or</div>
+        <div style="text-align:center;font-size:13px">
+          <a href="#" onclick="showMasterReset()">Forgot master password?</a>
+        </div>
+
+        <!-- MASTER RESET INLINE -->
+        <div id="master-reset-section" style="display:none;margin-top:20px">
+          <div class="warn-box">⚠️ Resetting the master password requires re-encrypting your vault. If you don't have
+            your Recovery Key, all entries will be deleted.</div>
+          <div id="master-reset-step1">
+            <button class="btn btn-ghost" onclick="sendMasterResetOTP()" style="margin-top:8px">Send Reset Code to
+              Email</button>
+          </div>
+          <div id="master-reset-step2" style="display:none">
+            <div class="info-box" style="margin-top:12px">📧 Enter the code from your email.</div>
+            <div class="otp-inputs" id="master-reset-otp-inputs"></div>
+            <div class="form-group" style="margin-top:12px">
+              <label class="form-label">New Master Password</label>
+              <input class="form-input" id="master-reset-newpw" type="password" placeholder="New master password" />
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:12px">
+              <input type="checkbox" id="clear-vault-check" style="accent-color:var(--red)" />
+              <span style="color:var(--red)">I understand my vault will be cleared (no Recovery Key)</span>
+            </label>
+            <button class="btn btn-danger" onclick="resetMasterPassword()" style="margin-bottom:6px">Reset Master
+              Password</button>
+          </div>
+          <div class="error-msg" id="master-reset-error"></div>
+        </div>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="confirmTOTP()">Enable Authenticator</button>
-    <div class="error-msg" id="totp-error"></div>
-  </div>
-</div>
-</div>
 
-<div id="toast"></div>
+    <!-- ════ VAULT PAGE ════ -->
+    <div class="page" id="vault-page">
+      <aside id="sidebar">
+        <div class="brand"><span class="brand-icon">🔐</span><span class="brand-name">Va<span>ult</span></span></div>
+        <div class="user-info" id="sidebar-email"></div>
+        <span class="sidebar-label">Categories</span>
+        <button class="cat-btn active" onclick="filterCat('all',this)"><span>🗂</span> All Items <span class="cat-count"
+            id="cnt-all">0</span></button>
+        <button class="cat-btn" onclick="filterCat('password',this)"><span>🔑</span> Passwords <span class="cat-count"
+            id="cnt-password">0</span></button>
+        <button class="cat-btn" onclick="filterCat('apikey',this)"><span>⚡</span> API Keys <span class="cat-count"
+            id="cnt-apikey">0</span></button>
+        <button class="cat-btn" onclick="filterCat('ssh',this)"><span>🖧</span> SSH / Tokens <span class="cat-count"
+            id="cnt-ssh">0</span></button>
+        <button class="cat-btn" onclick="filterCat('env',this)"><span>📄</span> Env Variables <span class="cat-count"
+            id="cnt-env">0</span></button>
+        <span class="sidebar-label" style="margin-top:8px">Security</span>
+        <button class="cat-btn" onclick="showTOTPModal()"><span>📱</span> Setup Authenticator</button>
+        <div class="sidebar-bottom">
+          <button class="side-btn" onclick="lockMaster()">🔒 Lock Vault</button>
+          <button class="side-btn red" onclick="logout()">⏻ Sign Out</button>
+        </div>
+      </aside>
+      <div id="vault-main">
+        <div class="topbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="vault-search" placeholder="Search credentials… (Ctrl+K)" oninput="renderVault()"
+              autocomplete="off" />
+          </div>
+          <button class="add-btn" onclick="openEntryModal()">＋ Add Entry</button>
+          <button class="lock-topbtn" onclick="lockMaster()">🔒 Lock</button>
+        </div>
+        <div id="vault-list"></div>
+      </div>
+    </div>
 
-<script type="module">
-import { apiFetch, setTokens, clearTokens, getAccessToken } from './src/utils/api.js';
-import { 
-  deriveMasterKey, 
-  createMasterVerifier as createVerifier, 
-  verifyMasterKey as checkVerifier, 
-  encryptEntry as encEntry, 
-  decryptEntry as decEntry, 
-  generateSalt as genSalt, 
-  generateRecoveryKey as genRecoveryKey, 
-  generatePassword as genPassword 
-} from './src/utils/crypto.js';
+    <!-- ════ ENTRY MODAL ════ -->
+    <div class="modal-overlay" id="entry-modal" style="display:none" onclick="if(event.target===this)closeEntryModal()">
+      <div class="modal">
+        <div class="modal-head">
+          <span class="modal-title" id="entry-modal-title">Add Entry</span>
+          <button class="close-btn" onclick="closeEntryModal()">✕</button>
+        </div>
+        <div class="type-tabs" id="entry-type-tabs">
+          <button class="type-tab active" onclick="setEntryType('password',this)">🔑 Password</button>
+          <button class="type-tab" onclick="setEntryType('apikey',this)">⚡ API Key</button>
+          <button class="type-tab" onclick="setEntryType('ssh',this)">🖧 SSH/Token</button>
+          <button class="type-tab" onclick="setEntryType('env',this)">📄 Env Var</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name / Title *</label>
+          <input class="form-input" id="e-name" placeholder="e.g. GitHub, AWS Production…" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="e-user-label">Username / Email</label>
+          <input class="form-input" id="e-user" placeholder="user@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="e-secret-label">Password / Secret *</label>
+          <div class="input-row">
+            <input class="form-input mono" type="password" id="e-secret"
+              oninput="if(currentEntryType==='password')updateStrength(this.value,'e-strength-fill','e-strength-label')" />
+            <button class="eye-btn" onclick="toggleEye('e-secret',this)">👁</button>
+          </div>
+          <div id="e-strength-wrap">
+            <div class="strength-bar-wrap">
+              <div class="strength-bar-fill" id="e-strength-fill" style="width:0"></div>
+            </div>
+            <div class="strength-label" id="e-strength-label"></div>
+          </div>
+          <div class="gen-row" style="margin-top:8px">
+            <button class="btn btn-ghost btn-sm" onclick="fillGenerated()">⚡ Generate</button>
+            <div class="gen-opts">
+              <label class="gen-opt"><input type="checkbox" id="g-upper" checked> A-Z</label>
+              <label class="gen-opt"><input type="checkbox" id="g-num" checked> 0-9</label>
+              <label class="gen-opt"><input type="checkbox" id="g-sym" checked> !@#</label>
+              <label class="gen-opt"><input type="range" id="g-len" min="8" max="64" value="20"><span id="g-len-val">
+                  20</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="e-url-label">URL / Service</label>
+          <input class="form-input" id="e-url" placeholder="https://github.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="e-notes" rows="3" placeholder="Optional notes…"></textarea>
+        </div>
+        <div class="modal-foot">
+          <button class="mfbtn mfbtn-ghost" onclick="closeEntryModal()">Cancel</button>
+          <button class="mfbtn mfbtn-primary" onclick="saveEntry()">Save Entry</button>
+        </div>
+      </div>
+    </div>
 
-// ════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════
-let pre2faToken   = null;
-let currentUser   = null;
-let masterKey     = null;   // CryptoKey — never leaves memory
-let vaultEntries  = [];     // Decrypted entries in memory
-let currentCat    = 'all';
-let editingId     = null;
-let currentEntryType = 'password';
-let pendingRecoveryHash = null;
+    <!-- ════ TOTP SETUP MODAL ════ -->
+    <div class="modal-overlay" id="totp-modal" style="display:none" onclick="if(event.target===this)closeTOTPModal()">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-head">
+          <span class="modal-title">📱 Authenticator App Setup</span>
+          <button class="close-btn" onclick="closeTOTPModal()">✕</button>
+        </div>
+        <div id="totp-setup-content">
+          <p style="font-size:13px;color:var(--text);margin-bottom:16px">Scan this QR code with Google Authenticator,
+            Authy, or any TOTP app.</p>
+          <div style="text-align:center;margin-bottom:16px">
+            <img id="totp-qr" src="" alt="QR Code" style="border-radius:10px;max-width:200px" />
+          </div>
+          <div class="info-box" style="font-size:12px">Can't scan? Manual key: <span class="form-input mono"
+              id="totp-secret-text" style="display:inline;padding:2px 6px;font-size:11px"></span></div>
+          <div class="form-group" style="margin-top:16px">
+            <label class="form-label">Enter code to confirm</label>
+            <div class="otp-inputs" id="totp-confirm-inputs"></div>
+          </div>
+          <button class="btn btn-primary" onclick="confirmTOTP()">Enable Authenticator</button>
+          <div class="error-msg" id="totp-error"></div>
+        </div>
+      </div>
+    </div>
 
-const CAT = {
-  password: { emoji:'🔑', label:'Passwords',     color:'#5b9cf6', userLabel:'Username/Email',   secretLabel:'Password',    urlLabel:'Website URL'  },
-  apikey:   { emoji:'⚡', label:'API Keys',      color:'#f0c040', userLabel:'Service/Account',  secretLabel:'API Key',     urlLabel:'API Endpoint' },
-  ssh:      { emoji:'🖧', label:'SSH/Tokens',    color:'#3dd68c', userLabel:'Host/Username',     secretLabel:'Key/Token',   urlLabel:'Host/Repo'    },
-  env:      { emoji:'📄', label:'Env Variables', color:'#a78bfa', userLabel:'Variable Name',     secretLabel:'Value',       urlLabel:'Project/App'  },
-};
+    <div id="toast"></div>
 
-const _enc = new TextEncoder();
-// ════════════════════════════════════════════════════
-//  AUTH — REGISTER
-// ════════════════════════════════════════════════════
-async function register() {
-  const email = v('reg-email'), password = v('reg-password');
-  setErr('reg-error','');
-  try {
-    setBtnLoading('reg-btn', true);
-    await apiFetch('POST','/auth/register',{email,password},{noAuth:true});
-    el('verify-email-display').textContent = email;
-    buildOTPInputs('verify-otp-inputs');
-    showAuthForm('verify-email');
-    toast('📧 Check your email for the verification code!');
-  } catch(e) { setErr('reg-error', e.message); }
-  finally { setBtnLoading('reg-btn', false); }
-}
+    <script type="module">
+      import { apiFetch, setTokens, clearTokens, getAccessToken } from './src/utils/api.js';
+      import {
+        deriveMasterKey,
+        createMasterVerifier as createVerifier,
+        verifyMasterKey as checkVerifier,
+        encryptEntry as encEntry,
+        decryptEntry as decEntry,
+        generateSalt as genSalt,
+        generateRecoveryKey as genRecoveryKey,
+        generatePassword as genPassword
+      } from './src/utils/crypto.js';
 
-async function verifyEmail() {
-  const email = v('reg-email') || currentUser?.email;
-  const otp   = getOTP('verify-otp-inputs');
-  setErr('verify-error','');
-  try {
-    setBtnLoading('verify-btn', true);
-    await apiFetch('POST','/auth/verify-email',{email,otp},{noAuth:true});
-    toast('✅ Email verified! Please sign in.');
-    showAuthForm('login');
-    el('login-email').value = email;
-  } catch(e) { setErr('verify-error', e.message); }
-  finally { setBtnLoading('verify-btn', false); }
-}
+      // ════════════════════════════════════════════════════
+      //  STATE
+      // ════════════════════════════════════════════════════
+      let pre2faToken = null;
+      let currentUser = null;
+      let masterKey = null;   // CryptoKey — never leaves memory
+      let vaultEntries = [];     // Decrypted entries in memory
+      let currentCat = 'all';
+      let editingId = null;
+      let currentEntryType = 'password';
+      let pendingRecoveryHash = null;
 
-async function resendVerification() {
-  const email = v('reg-email');
-  try {
-    await apiFetch('POST','/auth/resend-verification',{email},{noAuth:true});
-    toast('📧 Code resent!');
-  } catch(e) { toast('❌ '+e.message); }
-}
+      const CAT = {
+        password: { emoji: '🔑', label: 'Passwords', color: '#5b9cf6', userLabel: 'Username/Email', secretLabel: 'Password', urlLabel: 'Website URL' },
+        apikey: { emoji: '⚡', label: 'API Keys', color: '#f0c040', userLabel: 'Service/Account', secretLabel: 'API Key', urlLabel: 'API Endpoint' },
+        ssh: { emoji: '🖧', label: 'SSH/Tokens', color: '#3dd68c', userLabel: 'Host/Username', secretLabel: 'Key/Token', urlLabel: 'Host/Repo' },
+        env: { emoji: '📄', label: 'Env Variables', color: '#a78bfa', userLabel: 'Variable Name', secretLabel: 'Value', urlLabel: 'Project/App' },
+      };
 
-// ════════════════════════════════════════════════════
-//  AUTH — LOGIN
-// ════════════════════════════════════════════════════
-async function login() {
-  const email = v('login-email'), password = v('login-password');
-  setErr('login-error','');
-  try {
-    setBtnLoading('login-btn', true);
-    const data = await apiFetch('POST','/auth/login',{email,password},{noAuth:true});
-    if(data.requires2FA) {
-      pre2faToken = data.pre2faToken;
-      build2FAForm(data.methods);
-      showAuthForm('2fa');
-    } else {
-      setTokens(data.accessToken, data.refreshToken);
-      await afterLogin();
-    }
-  } catch(e) {
-    if(e.message.includes('EMAIL_UNVERIFIED') || e.message.includes('verify')) {
-      el('verify-email-display').textContent = email;
-      buildOTPInputs('verify-otp-inputs');
-      showAuthForm('verify-email');
-    } else { setErr('login-error', e.message); }
-  }
-  finally { setBtnLoading('login-btn', false); }
-}
-
-function build2FAForm(methods) {
-  const ms = el('method-select');
-  ms.innerHTML = '';
-  let active = null;
-  methods.forEach(m => {
-    const info = m === 'totp' ? {label:'Authenticator App',emoji:'📱'} : {label:'Email OTP',emoji:'📧'};
-    const btn = document.createElement('button');
-    btn.className = 'method-btn' + (!active ? ' active' : '');
-    btn.innerHTML = `<span class="emoji">${info.emoji}</span>${info.label}`;
-    btn.onclick = () => {
-      ms.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      el('twofa-email-section').style.display = m==='email' ? '' : 'none';
-      el('twofa-totp-section').style.display  = m==='totp'  ? '' : 'none';
-    };
-    ms.appendChild(btn);
-    if(!active) {
-      active = m;
-      el('twofa-email-section').style.display = m==='email' ? '' : 'none';
-      el('twofa-totp-section').style.display  = m==='totp'  ? '' : 'none';
-    }
-  });
-  buildOTPInputs('twofa-otp-inputs');
-  buildOTPInputs('twofa-totp-inputs');
-}
-
-async function verify2FA() {
-  const activeMethod = el('method-select').querySelector('.method-btn.active');
-  if(!activeMethod) return;
-  const method = activeMethod.textContent.includes('App') ? 'totp' : 'email';
-  const code   = method === 'totp' ? getOTP('twofa-totp-inputs') : getOTP('twofa-otp-inputs');
-  setErr('twofa-error','');
-  try {
-    setBtnLoading('twofa-btn', true);
-    const data = await apiFetch('POST','/auth/login/2fa',{method,code},{token:pre2faToken});
-    setTokens(data.accessToken, data.refreshToken);
-    await afterLogin();
-  } catch(e) { setErr('twofa-error', e.message); }
-  finally { setBtnLoading('twofa-btn', false); }
-}
-
-// ════════════════════════════════════════════════════
-//  AFTER LOGIN — load user, check master password
-// ════════════════════════════════════════════════════
-async function afterLogin() {
-  try {
-    const data = await apiFetch('GET','/auth/me');
-    currentUser = data.user;
-    el('sidebar-email').textContent = currentUser.email;
-    el('master-lock-email').textContent = currentUser.email;
-
-    if(!currentUser.master_password_set) {
-      showPage('master-setup-page');
-    } else {
-      showPage('vault-page');
-      showMasterLock();
-    }
-  } catch(e) {
-    toast('❌ Failed to load profile: '+e.message);
-  }
-}
-
-// ════════════════════════════════════════════════════
-//  MASTER PASSWORD SETUP
-// ════════════════════════════════════════════════════
-async function setupMasterPassword() {
-  const pw  = v('mp-password');
-  const cpw = v('mp-confirm');
-  setErr('mp-error','');
-  if(!pw || pw.length < 8) return setErr('mp-error','Master password must be at least 8 characters.');
-  if(pw !== cpw) return setErr('mp-error','Passwords do not match.');
-  try {
-    setBtnLoading('mp-setup-btn', true);
-    const salt       = genSalt();
-    const key        = await deriveMasterKey(pw, salt);
-    const verifier   = await createVerifier(key);
-    const recoveryKey = genRecoveryKey();
-    // Hash recovery key (SHA-256 hex) client-side for sending — server bcrypts it
-    const rkBuf  = await crypto.subtle.digest('SHA-256', _enc.encode(recoveryKey));
-    const rkHex  = Array.from(new Uint8Array(rkBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-
-    await apiFetch('POST','/auth/master-setup',{
-      masterKeySalt: salt, masterKeyVerifier: verifier, recoveryKeyHash: rkHex
-    });
-
-    masterKey = key;
-    el('recovery-key-value').textContent = recoveryKey;
-    el('master-setup-form').style.display = 'none';
-    el('master-recovery-display').style.display = '';
-    currentUser.master_password_set = true;
-  } catch(e) { setErr('mp-error', e.message); }
-  finally { setBtnLoading('mp-setup-btn', false); }
-}
-
-function confirmRecovery() {
-  if(!el('recovery-confirmed').checked) { toast('⚠️ Please confirm you saved the Recovery Key.'); return; }
-  el('recovery-key-value').textContent = ''; // Clear from DOM
-  showPage('vault-page');
-  hideMasterLock();
-  loadVault();
-}
-
-// ════════════════════════════════════════════════════
-//  MASTER UNLOCK
-// ════════════════════════════════════════════════════
-function showMasterLock() {
-  el('master-lock').classList.add('show');
-  el('master-unlock-input').value = '';
-  setTimeout(()=>el('master-unlock-input').focus(), 100);
-}
-function hideMasterLock() { el('master-lock').classList.remove('show'); }
-
-async function unlockVault() {
-  const pw = v('master-unlock-input');
-  setErr('unlock-error','');
-  if(!pw) return setErr('unlock-error','Please enter your master password.');
-  try {
-    setBtnLoading('unlock-btn', true);
-    const saltData = await apiFetch('GET','/auth/master-salt');
-    const key      = await deriveMasterKey(pw, saltData.masterKeySalt);
-    const valid    = await checkVerifier(key, saltData.masterKeyVerifier);
-    if(!valid) { setErr('unlock-error','Incorrect master password.'); return; }
-    masterKey = key;
-    hideMasterLock();
-    await loadVault();
-  } catch(e) { setErr('unlock-error', e.message); }
-  finally { setBtnLoading('unlock-btn', false); }
-}
-
-function lockMaster() {
-  masterKey = null;
-  vaultEntries = [];
-  showMasterLock();
-}
-
-// ════════════════════════════════════════════════════
-//  MASTER RESET
-// ════════════════════════════════════════════════════
-function showMasterReset() {
-  el('master-reset-section').style.display = '';
-}
-async function sendMasterResetOTP() {
-  try {
-    await apiFetch('POST','/auth/master-reset/init');
-    buildOTPInputs('master-reset-otp-inputs');
-    el('master-reset-step1').style.display = 'none';
-    el('master-reset-step2').style.display = '';
-    toast('📧 Reset code sent to your email.');
-  } catch(e) { setErr('master-reset-error', e.message); }
-}
-async function resetMasterPassword() {
-  const otp    = getOTP('master-reset-otp-inputs');
-  const newpw  = v('master-reset-newpw');
-  const clearV = el('clear-vault-check').checked;
-  if(!newpw || newpw.length < 8) return setErr('master-reset-error','New password must be 8+ characters.');
-  try {
-    const salt      = genSalt();
-    const key       = await deriveMasterKey(newpw, salt);
-    const verifier  = await createVerifier(key);
-    const rk        = genRecoveryKey();
-    const rkBuf     = await crypto.subtle.digest('SHA-256', _enc.encode(rk));
-    const rkHex     = Array.from(new Uint8Array(rkBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-
-    await apiFetch('POST','/auth/master-reset/verify',{
-      otp, masterKeySalt:salt, masterKeyVerifier:verifier, recoveryKeyHash:rkHex, clearVault:clearV
-    });
-
-    masterKey = key;
-    toast('✅ Master password reset! New Recovery Key: '+rk);
-    el('master-reset-section').style.display='none';
-    hideMasterLock();
-    await loadVault();
-  } catch(e) { setErr('master-reset-error', e.message); }
-}
-
-// ════════════════════════════════════════════════════
-//  VAULT — LOAD & RENDER
-// ════════════════════════════════════════════════════
-async function loadVault() {
-  try {
-    const data = await apiFetch('GET','/vault');
-    vaultEntries = await Promise.all(
-      data.entries.map(async e => {
+      const _enc = new TextEncoder();
+      // ════════════════════════════════════════════════════
+      //  AUTH — REGISTER
+      // ════════════════════════════════════════════════════
+      async function register() {
+        const email = v('reg-email'), password = v('reg-password');
+        setErr('reg-error', '');
         try {
-          const plain = await decEntry(e.encrypted_payload, e.iv, masterKey);
-          return { ...plain, _id: e.id, _type: e.type, _updated: e.updated_at };
-        } catch { return null; }
-      })
-    );
-    vaultEntries = vaultEntries.filter(Boolean);
-    renderVault();
-    updateCounts();
-  } catch(e) { toast('❌ Failed to load vault: '+e.message); }
-}
+          setBtnLoading('reg-btn', true);
+          await apiFetch('POST', '/auth/register', { email, password }, { noAuth: true });
+          el('verify-email-display').textContent = email;
+          buildOTPInputs('verify-otp-inputs');
+          showAuthForm('verify-email');
+          toast('📧 Check your email for the verification code!');
+        } catch (e) { setErr('reg-error', e.message); }
+        finally { setBtnLoading('reg-btn', false); }
+      }
 
-function renderVault() {
-  const q    = v('vault-search').toLowerCase();
-  const list = el('vault-list');
-  const cats = currentCat === 'all' ? ['password','apikey','ssh','env'] : [currentCat];
-  let html = '', total = 0;
+      async function verifyEmail() {
+        const email = v('reg-email') || currentUser?.email;
+        const otp = getOTP('verify-otp-inputs');
+        setErr('verify-error', '');
+        try {
+          setBtnLoading('verify-btn', true);
+          await apiFetch('POST', '/auth/verify-email', { email, otp }, { noAuth: true });
+          toast('✅ Email verified! Please sign in.');
+          showAuthForm('login');
+          el('login-email').value = email;
+        } catch (e) { setErr('verify-error', e.message); }
+        finally { setBtnLoading('verify-btn', false); }
+      }
 
-  cats.forEach(cat => {
-    const items = vaultEntries.filter(e =>
-      e._type === cat && (!q || [e.name,e.user,e.url,e.notes].join(' ').toLowerCase().includes(q))
-    );
-    if(!items.length) return;
-    total += items.length;
-    const m = CAT[cat];
-    html += `<div class="sec-title">${m.emoji} ${m.label}</div><div class="entry-grid">`;
-    items.forEach(e => {
-      const masked = '•'.repeat(Math.min((e.secret||'').length, 24));
-      html += `
+      async function resendVerification() {
+        const email = v('reg-email');
+        try {
+          await apiFetch('POST', '/auth/resend-verification', { email }, { noAuth: true });
+          toast('📧 Code resent!');
+        } catch (e) { toast('❌ ' + e.message); }
+      }
+
+      // ════════════════════════════════════════════════════
+      //  AUTH — LOGIN
+      // ════════════════════════════════════════════════════
+      async function login() {
+        const email = v('login-email'), password = v('login-password');
+        setErr('login-error', '');
+        try {
+          setBtnLoading('login-btn', true);
+          const data = await apiFetch('POST', '/auth/login', { email, password }, { noAuth: true });
+          if (data.requires2FA) {
+            pre2faToken = data.pre2faToken;
+            build2FAForm(data.methods);
+            showAuthForm('2fa');
+          } else {
+            setTokens(data.accessToken, data.refreshToken);
+            await afterLogin();
+          }
+        } catch (e) {
+          if (e.message.includes('EMAIL_UNVERIFIED') || e.message.includes('verify')) {
+            el('verify-email-display').textContent = email;
+            buildOTPInputs('verify-otp-inputs');
+            showAuthForm('verify-email');
+          } else { setErr('login-error', e.message); }
+        }
+        finally { setBtnLoading('login-btn', false); }
+      }
+
+      function build2FAForm(methods) {
+        const ms = el('method-select');
+        ms.innerHTML = '';
+        let active = null;
+        methods.forEach(m => {
+          const info = m === 'totp' ? { label: 'Authenticator App', emoji: '📱' } : { label: 'Email OTP', emoji: '📧' };
+          const btn = document.createElement('button');
+          btn.className = 'method-btn' + (!active ? ' active' : '');
+          btn.innerHTML = `<span class="emoji">${info.emoji}</span>${info.label}`;
+          btn.onclick = () => {
+            ms.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            el('twofa-email-section').style.display = m === 'email' ? '' : 'none';
+            el('twofa-totp-section').style.display = m === 'totp' ? '' : 'none';
+          };
+          ms.appendChild(btn);
+          if (!active) {
+            active = m;
+            el('twofa-email-section').style.display = m === 'email' ? '' : 'none';
+            el('twofa-totp-section').style.display = m === 'totp' ? '' : 'none';
+          }
+        });
+        buildOTPInputs('twofa-otp-inputs');
+        buildOTPInputs('twofa-totp-inputs');
+      }
+
+      async function verify2FA() {
+        const activeMethod = el('method-select').querySelector('.method-btn.active');
+        if (!activeMethod) return;
+        const method = activeMethod.textContent.includes('App') ? 'totp' : 'email';
+        const code = method === 'totp' ? getOTP('twofa-totp-inputs') : getOTP('twofa-otp-inputs');
+        setErr('twofa-error', '');
+        try {
+          setBtnLoading('twofa-btn', true);
+          const data = await apiFetch('POST', '/auth/login/2fa', { method, code }, { token: pre2faToken });
+          setTokens(data.accessToken, data.refreshToken);
+          await afterLogin();
+        } catch (e) { setErr('twofa-error', e.message); }
+        finally { setBtnLoading('twofa-btn', false); }
+      }
+
+      // ════════════════════════════════════════════════════
+      //  AFTER LOGIN — load user, check master password
+      // ════════════════════════════════════════════════════
+      async function afterLogin() {
+        try {
+          const data = await apiFetch('GET', '/auth/me');
+          currentUser = data.user;
+          el('sidebar-email').textContent = currentUser.email;
+          el('master-lock-email').textContent = currentUser.email;
+
+          if (!currentUser.master_password_set) {
+            showPage('master-setup-page');
+          } else {
+            showPage('vault-page');
+            showMasterLock();
+          }
+        } catch (e) {
+          toast('❌ Failed to load profile: ' + e.message);
+        }
+      }
+
+      // ════════════════════════════════════════════════════
+      //  MASTER PASSWORD SETUP
+      // ════════════════════════════════════════════════════
+      async function setupMasterPassword() {
+        const pw = v('mp-password');
+        const cpw = v('mp-confirm');
+        setErr('mp-error', '');
+        if (!pw || pw.length < 8) return setErr('mp-error', 'Master password must be at least 8 characters.');
+        if (pw !== cpw) return setErr('mp-error', 'Passwords do not match.');
+        try {
+          setBtnLoading('mp-setup-btn', true);
+          const salt = genSalt();
+          const key = await deriveMasterKey(pw, salt);
+          const verifier = await createVerifier(key);
+          const recoveryKey = genRecoveryKey();
+          // Hash recovery key (SHA-256 hex) client-side for sending — server bcrypts it
+          const rkBuf = await crypto.subtle.digest('SHA-256', _enc.encode(recoveryKey));
+          const rkHex = Array.from(new Uint8Array(rkBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+          await apiFetch('POST', '/auth/master-setup', {
+            masterKeySalt: salt, masterKeyVerifier: verifier, recoveryKeyHash: rkHex
+          });
+
+          masterKey = key;
+          el('recovery-key-value').textContent = recoveryKey;
+          el('master-setup-form').style.display = 'none';
+          el('master-recovery-display').style.display = '';
+          currentUser.master_password_set = true;
+        } catch (e) { setErr('mp-error', e.message); }
+        finally { setBtnLoading('mp-setup-btn', false); }
+      }
+
+      function confirmRecovery() {
+        if (!el('recovery-confirmed').checked) { toast('⚠️ Please confirm you saved the Recovery Key.'); return; }
+        el('recovery-key-value').textContent = ''; // Clear from DOM
+        showPage('vault-page');
+        hideMasterLock();
+        loadVault();
+      }
+
+      // ════════════════════════════════════════════════════
+      //  MASTER UNLOCK
+      // ════════════════════════════════════════════════════
+      function showMasterLock() {
+        el('master-lock').classList.add('show');
+        el('master-unlock-input').value = '';
+        setTimeout(() => el('master-unlock-input').focus(), 100);
+      }
+      function hideMasterLock() { el('master-lock').classList.remove('show'); }
+
+      async function unlockVault() {
+        const pw = v('master-unlock-input');
+        setErr('unlock-error', '');
+        if (!pw) return setErr('unlock-error', 'Please enter your master password.');
+        try {
+          setBtnLoading('unlock-btn', true);
+          const saltData = await apiFetch('GET', '/auth/master-salt');
+          const key = await deriveMasterKey(pw, saltData.masterKeySalt);
+          const valid = await checkVerifier(key, saltData.masterKeyVerifier);
+          if (!valid) { setErr('unlock-error', 'Incorrect master password.'); return; }
+          masterKey = key;
+          hideMasterLock();
+          await loadVault();
+        } catch (e) { setErr('unlock-error', e.message); }
+        finally { setBtnLoading('unlock-btn', false); }
+      }
+
+      function lockMaster() {
+        masterKey = null;
+        vaultEntries = [];
+        showMasterLock();
+      }
+
+      // ════════════════════════════════════════════════════
+      //  MASTER RESET
+      // ════════════════════════════════════════════════════
+      function showMasterReset() {
+        el('master-reset-section').style.display = '';
+      }
+      async function sendMasterResetOTP() {
+        try {
+          await apiFetch('POST', '/auth/master-reset/init');
+          buildOTPInputs('master-reset-otp-inputs');
+          el('master-reset-step1').style.display = 'none';
+          el('master-reset-step2').style.display = '';
+          toast('📧 Reset code sent to your email.');
+        } catch (e) { setErr('master-reset-error', e.message); }
+      }
+      async function resetMasterPassword() {
+        const otp = getOTP('master-reset-otp-inputs');
+        const newpw = v('master-reset-newpw');
+        const clearV = el('clear-vault-check').checked;
+        if (!newpw || newpw.length < 8) return setErr('master-reset-error', 'New password must be 8+ characters.');
+        try {
+          const salt = genSalt();
+          const key = await deriveMasterKey(newpw, salt);
+          const verifier = await createVerifier(key);
+          const rk = genRecoveryKey();
+          const rkBuf = await crypto.subtle.digest('SHA-256', _enc.encode(rk));
+          const rkHex = Array.from(new Uint8Array(rkBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+          await apiFetch('POST', '/auth/master-reset/verify', {
+            otp, masterKeySalt: salt, masterKeyVerifier: verifier, recoveryKeyHash: rkHex, clearVault: clearV
+          });
+
+          masterKey = key;
+          toast('✅ Master password reset! New Recovery Key: ' + rk);
+          el('master-reset-section').style.display = 'none';
+          hideMasterLock();
+          await loadVault();
+        } catch (e) { setErr('master-reset-error', e.message); }
+      }
+
+      // ════════════════════════════════════════════════════
+      //  VAULT — LOAD & RENDER
+      // ════════════════════════════════════════════════════
+      async function loadVault() {
+        try {
+          const data = await apiFetch('GET', '/vault');
+          vaultEntries = await Promise.all(
+            data.entries.map(async e => {
+              try {
+                const plain = await decEntry(e.encrypted_payload, e.iv, masterKey);
+                return { ...plain, _id: e.id, _type: e.type, _updated: e.updated_at };
+              } catch { return null; }
+            })
+          );
+          vaultEntries = vaultEntries.filter(Boolean);
+          renderVault();
+          updateCounts();
+        } catch (e) { toast('❌ Failed to load vault: ' + e.message); }
+      }
+
+      function renderVault() {
+        const q = v('vault-search').toLowerCase();
+        const list = el('vault-list');
+        const cats = currentCat === 'all' ? ['password', 'apikey', 'ssh', 'env'] : [currentCat];
+        let html = '', total = 0;
+
+        cats.forEach(cat => {
+          const items = vaultEntries.filter(e =>
+            e._type === cat && (!q || [e.name, e.user, e.url, e.notes].join(' ').toLowerCase().includes(q))
+          );
+          if (!items.length) return;
+          total += items.length;
+          const m = CAT[cat];
+          html += `<div class="sec-title">${m.emoji} ${m.label}</div><div class="entry-grid">`;
+          items.forEach(e => {
+            const masked = '•'.repeat(Math.min((e.secret || '').length, 24));
+            html += `
       <div class="entry-card" style="--cc:${m.color}" onclick="editEntry('${esc(e._id)}')">
         <div class="card-head">
           <div class="card-avatar">${m.emoji}</div>
           <div class="card-meta">
-            <div class="card-name">${esc(e.name||'')}</div>
-            <div class="card-sub">${esc(e.user||e.url||'—')}</div>
+            <div class="card-name">${esc(e.name || '')}</div>
+            <div class="card-sub">${esc(e.user || e.url || '—')}</div>
           </div>
           <div class="card-acts" onclick="event.stopPropagation()">
             <button class="ico-btn" onclick="copySecret('${esc(e._id)}')">📋</button>
@@ -896,345 +1741,346 @@ function renderVault() {
         <span class="type-tag" style="background:${m.color}22;color:${m.color}">${m.label}</span>
         ${e.notes ? `<div style="font-size:11px;color:var(--dim);margin-top:6px;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.notes)}</div>` : ''}
       </div>`;
-    });
-    html += '</div>';
-  });
+          });
+          html += '</div>';
+        });
 
-  if(!total) html = `<div style="text-align:center;padding:60px;color:var(--dim)"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:16px;font-weight:600;color:var(--text)">${q?'No results':'No credentials yet'}</div><div style="font-size:13px;margin-top:6px">${q?'Try a different search.':'Click "+ Add Entry" to get started.'}</div></div>`;
-  list.innerHTML = html;
-}
+        if (!total) html = `<div style="text-align:center;padding:60px;color:var(--dim)"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:16px;font-weight:600;color:var(--text)">${q ? 'No results' : 'No credentials yet'}</div><div style="font-size:13px;margin-top:6px">${q ? 'Try a different search.' : 'Click "+ Add Entry" to get started.'}</div></div>`;
+        list.innerHTML = html;
+      }
 
-function updateCounts() {
-  let all=0;
-  ['password','apikey','ssh','env'].forEach(t => {
-    const n = vaultEntries.filter(e=>e._type===t).length;
-    el('cnt-'+t).textContent = n; all+=n;
-  });
-  el('cnt-all').textContent = all;
-}
+      function updateCounts() {
+        let all = 0;
+        ['password', 'apikey', 'ssh', 'env'].forEach(t => {
+          const n = vaultEntries.filter(e => e._type === t).length;
+          el('cnt-' + t).textContent = n; all += n;
+        });
+        el('cnt-all').textContent = all;
+      }
 
-// ════════════════════════════════════════════════════
-//  ENTRY CRUD
-// ════════════════════════════════════════════════════
-function openEntryModal(id=null) {
-  editingId = id;
-  el('entry-modal-title').textContent = id ? 'Edit Entry' : 'Add Entry';
-  if(!id) {
-    ['e-name','e-user','e-secret','e-url','e-notes'].forEach(i=>el(i).value='');
-    setEntryType('password', el('entry-type-tabs').querySelector('.type-tab'));
-  } else {
-    const e = vaultEntries.find(x=>x._id===id);
-    if(!e) return;
-    setEntryType(e._type, el('entry-type-tabs').querySelectorAll('.type-tab')[[...Object.keys(CAT)].indexOf(e._type)]);
-    el('e-name').value   = e.name   || '';
-    el('e-user').value   = e.user   || '';
-    el('e-secret').value = e.secret || '';
-    el('e-url').value    = e.url    || '';
-    el('e-notes').value  = e.notes  || '';
-    if(e._type==='password') updateStrength(e.secret||'','e-strength-fill','e-strength-label');
-  }
-  el('entry-modal').style.display = 'flex';
-  setTimeout(()=>el('e-name').focus(),50);
-}
-function closeEntryModal() { el('entry-modal').style.display='none'; editingId=null; }
-function editEntry(id) { openEntryModal(id); }
+      // ════════════════════════════════════════════════════
+      //  ENTRY CRUD
+      // ════════════════════════════════════════════════════
+      function openEntryModal(id = null) {
+        editingId = id;
+        el('entry-modal-title').textContent = id ? 'Edit Entry' : 'Add Entry';
+        if (!id) {
+          ['e-name', 'e-user', 'e-secret', 'e-url', 'e-notes'].forEach(i => el(i).value = '');
+          setEntryType('password', el('entry-type-tabs').querySelector('.type-tab'));
+        } else {
+          const e = vaultEntries.find(x => x._id === id);
+          if (!e) return;
+          setEntryType(e._type, el('entry-type-tabs').querySelectorAll('.type-tab')[[...Object.keys(CAT)].indexOf(e._type)]);
+          el('e-name').value = e.name || '';
+          el('e-user').value = e.user || '';
+          el('e-secret').value = e.secret || '';
+          el('e-url').value = e.url || '';
+          el('e-notes').value = e.notes || '';
+          if (e._type === 'password') updateStrength(e.secret || '', 'e-strength-fill', 'e-strength-label');
+        }
+        el('entry-modal').style.display = 'flex';
+        setTimeout(() => el('e-name').focus(), 50);
+      }
+      function closeEntryModal() { el('entry-modal').style.display = 'none'; editingId = null; }
+      function editEntry(id) { openEntryModal(id); }
 
-function setEntryType(type, btn) {
-  currentEntryType = type;
-  el('entry-type-tabs').querySelectorAll('.type-tab').forEach(t=>t.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  const m = CAT[type];
-  el('e-user-label').textContent   = m.userLabel;
-  el('e-secret-label').textContent = m.secretLabel;
-  el('e-url-label').textContent    = m.urlLabel;
-  el('e-strength-wrap').style.display = type==='password' ? '' : 'none';
-}
+      function setEntryType(type, btn) {
+        currentEntryType = type;
+        el('entry-type-tabs').querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        const m = CAT[type];
+        el('e-user-label').textContent = m.userLabel;
+        el('e-secret-label').textContent = m.secretLabel;
+        el('e-url-label').textContent = m.urlLabel;
+        el('e-strength-wrap').style.display = type === 'password' ? '' : 'none';
+      }
 
-async function saveEntry() {
-  const name   = v('e-name').trim();
-  const secret = v('e-secret').trim();
-  if(!name || !secret) return toast('⚠️ Name and secret are required.');
+      async function saveEntry() {
+        const name = v('e-name').trim();
+        const secret = v('e-secret').trim();
+        if (!name || !secret) return toast('⚠️ Name and secret are required.');
 
-  const obj = {
-    name, secret,
-    user:  v('e-user').trim(),
-    url:   v('e-url').trim(),
-    notes: v('e-notes').trim(),
-  };
+        const obj = {
+          name, secret,
+          user: v('e-user').trim(),
+          url: v('e-url').trim(),
+          notes: v('e-notes').trim(),
+        };
 
-  try {
-    const { encrypted_payload, iv } = await encEntry(obj, masterKey);
-    const payload = { type: currentEntryType, encrypted_payload, iv, name_preview: name };
+        try {
+          const { encrypted_payload, iv } = await encEntry(obj, masterKey);
+          const payload = { type: currentEntryType, encrypted_payload, iv, name_preview: name };
 
-    if(editingId) {
-      await apiFetch('PUT', `/vault/${editingId}`, payload);
-      const idx = vaultEntries.findIndex(e=>e._id===editingId);
-      if(idx>=0) vaultEntries[idx] = {...obj, _id:editingId, _type:currentEntryType, _updated:new Date().toISOString()};
-      toast('✅ Entry updated.');
-    } else {
-      const data = await apiFetch('POST', '/vault', payload);
-      vaultEntries.push({...obj, _id:data.entry.id, _type:currentEntryType, _updated:new Date().toISOString()});
-      toast('✅ Entry saved.');
-    }
-    closeEntryModal();
-    renderVault();
-    updateCounts();
-  } catch(e) { toast('❌ '+e.message); }
-}
+          if (editingId) {
+            await apiFetch('PUT', `/vault/${editingId}`, payload);
+            const idx = vaultEntries.findIndex(e => e._id === editingId);
+            if (idx >= 0) vaultEntries[idx] = { ...obj, _id: editingId, _type: currentEntryType, _updated: new Date().toISOString() };
+            toast('✅ Entry updated.');
+          } else {
+            const data = await apiFetch('POST', '/vault', payload);
+            vaultEntries.push({ ...obj, _id: data.entry.id, _type: currentEntryType, _updated: new Date().toISOString() });
+            toast('✅ Entry saved.');
+          }
+          closeEntryModal();
+          renderVault();
+          updateCounts();
+        } catch (e) { toast('❌ ' + e.message); }
+      }
 
-async function deleteEntry(id) {
-  if(!confirm('Delete this entry? Cannot be undone.')) return;
-  try {
-    await apiFetch('DELETE', `/vault/${id}`);
-    vaultEntries = vaultEntries.filter(e=>e._id!==id);
-    renderVault(); updateCounts(); toast('🗑 Deleted.');
-  } catch(e) { toast('❌ '+e.message); }
-}
+      async function deleteEntry(id) {
+        if (!confirm('Delete this entry? Cannot be undone.')) return;
+        try {
+          await apiFetch('DELETE', `/vault/${id}`);
+          vaultEntries = vaultEntries.filter(e => e._id !== id);
+          renderVault(); updateCounts(); toast('🗑 Deleted.');
+        } catch (e) { toast('❌ ' + e.message); }
+      }
 
-function copySecret(id) {
-  const e = vaultEntries.find(x=>x._id===id);
-  if(!e) return;
-  navigator.clipboard.writeText(e.secret).then(()=>toast('📋 Copied!'));
-}
+      function copySecret(id) {
+        const e = vaultEntries.find(x => x._id === id);
+        if (!e) return;
+        navigator.clipboard.writeText(e.secret).then(() => toast('📋 Copied!'));
+      }
 
-const revTimers={};
-function toggleReveal(id) {
-  const el2 = el('sv-'+id);
-  const btn  = el2?.nextElementSibling;
-  const e    = vaultEntries.find(x=>x._id===id);
-  if(!el2||!e) return;
-  if(el2.classList.contains('show')) {
-    el2.textContent='•'.repeat(Math.min(e.secret.length,24));
-    el2.classList.remove('show'); btn.textContent='show';
-    clearTimeout(revTimers[id]);
-  } else {
-    el2.textContent=e.secret; el2.classList.add('show'); btn.textContent='hide';
-    revTimers[id]=setTimeout(()=>{
-      if(el2.classList.contains('show')){el2.textContent='•'.repeat(Math.min(e.secret.length,24));el2.classList.remove('show');btn.textContent='show';}
-    },15000);
-  }
-}
+      const revTimers = {};
+      function toggleReveal(id) {
+        const el2 = el('sv-' + id);
+        const btn = el2?.nextElementSibling;
+        const e = vaultEntries.find(x => x._id === id);
+        if (!el2 || !e) return;
+        if (el2.classList.contains('show')) {
+          el2.textContent = '•'.repeat(Math.min(e.secret.length, 24));
+          el2.classList.remove('show'); btn.textContent = 'show';
+          clearTimeout(revTimers[id]);
+        } else {
+          el2.textContent = e.secret; el2.classList.add('show'); btn.textContent = 'hide';
+          revTimers[id] = setTimeout(() => {
+            if (el2.classList.contains('show')) { el2.textContent = '•'.repeat(Math.min(e.secret.length, 24)); el2.classList.remove('show'); btn.textContent = 'show'; }
+          }, 15000);
+        }
+      }
 
-// ════════════════════════════════════════════════════
-//  TOTP SETUP
-// ════════════════════════════════════════════════════
-async function showTOTPModal() {
-  try {
-    const data = await apiFetch('POST','/auth/totp/init');
-    el('totp-qr').src = data.qrCode;
-    el('totp-secret-text').textContent = data.secret;
-    buildOTPInputs('totp-confirm-inputs');
-    el('totp-modal').style.display='flex';
-  } catch(e) { toast('❌ '+e.message); }
-}
-function closeTOTPModal() { el('totp-modal').style.display='none'; }
-async function confirmTOTP() {
-  const code = getOTP('totp-confirm-inputs');
-  setErr('totp-error','');
-  try {
-    await apiFetch('POST','/auth/totp/confirm',{code});
-    toast('✅ Authenticator enabled!');
-    closeTOTPModal();
-  } catch(e) { setErr('totp-error', e.message); }
-}
+      // ════════════════════════════════════════════════════
+      //  TOTP SETUP
+      // ════════════════════════════════════════════════════
+      async function showTOTPModal() {
+        try {
+          const data = await apiFetch('POST', '/auth/totp/init');
+          el('totp-qr').src = data.qrCode;
+          el('totp-secret-text').textContent = data.secret;
+          buildOTPInputs('totp-confirm-inputs');
+          el('totp-modal').style.display = 'flex';
+        } catch (e) { toast('❌ ' + e.message); }
+      }
+      function closeTOTPModal() { el('totp-modal').style.display = 'none'; }
+      async function confirmTOTP() {
+        const code = getOTP('totp-confirm-inputs');
+        setErr('totp-error', '');
+        try {
+          await apiFetch('POST', '/auth/totp/confirm', { code });
+          toast('✅ Authenticator enabled!');
+          closeTOTPModal();
+        } catch (e) { setErr('totp-error', e.message); }
+      }
 
-// ════════════════════════════════════════════════════
-//  FORGOT LOGIN PASSWORD
-// ════════════════════════════════════════════════════
-async function forgotPasswordStep1() {
-  const email = v('forgot-email');
-  setErr('forgot-error',''); el('forgot-success').textContent='';
-  try {
-    await apiFetch('POST','/auth/forgot-password',{email},{noAuth:true});
-    buildOTPInputs('forgot-otp-inputs');
-    el('forgot-step1').style.display='none';
-    el('forgot-step2').style.display='';
-    el('forgot-success').textContent='Reset code sent! Check your email.';
-  } catch(e) { setErr('forgot-error',e.message); }
-}
-async function resetPassword() {
-  const email     = v('forgot-email');
-  const otp       = getOTP('forgot-otp-inputs');
-  const newPassword = v('forgot-newpw');
-  setErr('forgot-error','');
-  try {
-    await apiFetch('POST','/auth/reset-password',{email,otp,newPassword},{noAuth:true});
-    toast('✅ Password reset! Please sign in.');
-    showAuthForm('login');
-  } catch(e) { setErr('forgot-error',e.message); }
-}
+      // ════════════════════════════════════════════════════
+      //  FORGOT LOGIN PASSWORD
+      // ════════════════════════════════════════════════════
+      async function forgotPasswordStep1() {
+        const email = v('forgot-email');
+        setErr('forgot-error', ''); el('forgot-success').textContent = '';
+        try {
+          await apiFetch('POST', '/auth/forgot-password', { email }, { noAuth: true });
+          buildOTPInputs('forgot-otp-inputs');
+          el('forgot-step1').style.display = 'none';
+          el('forgot-step2').style.display = '';
+          el('forgot-success').textContent = 'Reset code sent! Check your email.';
+        } catch (e) { setErr('forgot-error', e.message); }
+      }
+      async function resetPassword() {
+        const email = v('forgot-email');
+        const otp = getOTP('forgot-otp-inputs');
+        const newPassword = v('forgot-newpw');
+        setErr('forgot-error', '');
+        try {
+          await apiFetch('POST', '/auth/reset-password', { email, otp, newPassword }, { noAuth: true });
+          toast('✅ Password reset! Please sign in.');
+          showAuthForm('login');
+        } catch (e) { setErr('forgot-error', e.message); }
+      }
 
-// ════════════════════════════════════════════════════
-//  LOGOUT
-// ════════════════════════════════════════════════════
-async function logout() {
-  try { await apiFetch('POST','/auth/logout'); } catch {}
-  clearTokens();
-  masterKey = null; vaultEntries = [];
-  showPage('auth-page');
-  showAuthForm('login');
-}
+      // ════════════════════════════════════════════════════
+      //  LOGOUT
+      // ════════════════════════════════════════════════════
+      async function logout() {
+        try { await apiFetch('POST', '/auth/logout'); } catch { }
+        clearTokens();
+        masterKey = null; vaultEntries = [];
+        showPage('auth-page');
+        showAuthForm('login');
+      }
 
-// ════════════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════════════
-function el(id) { return document.getElementById(id); }
-function v(id)  { return el(id)?.value || ''; }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      // ════════════════════════════════════════════════════
+      //  HELPERS
+      // ════════════════════════════════════════════════════
+      function el(id) { return document.getElementById(id); }
+      function v(id) { return el(id)?.value || ''; }
+      function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  el(id)?.classList.add('active');
-}
-function showAuthForm(form) {
-  ['form-register','form-login','form-verify-email','form-2fa','form-forgot-pw'].forEach(f=>{
-    el(f).style.display = f===`form-${form}` ? '' : 'none';
-  });
-}
+      function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        el(id)?.classList.add('active');
+      }
+      function showAuthForm(form) {
+        ['form-register', 'form-login', 'form-verify-email', 'form-2fa', 'form-forgot-pw'].forEach(f => {
+          el(f).style.display = f === `form-${form}` ? '' : 'none';
+        });
+      }
 
-function setErr(id, msg) {
-  const e = el(id);
-  if (e) {
-    e.textContent = msg;
-    e.style.display = msg ? 'block' : 'none';
-  }
-}
-function setBtnLoading(id, loading) {
-  const b = el(id); if(!b) return;
-  if(!loading && !b.dataset.label) b.dataset.label = b.textContent;
-  if(loading && !b.dataset.label) b.dataset.label = b.textContent; 
-  b.disabled = loading;
-  b.innerHTML = loading ? '<div class="spinner"></div>' : b.dataset.label;
-}
+      function setErr(id, msg) {
+        const e = el(id);
+        if (e) {
+          e.textContent = msg;
+          e.style.display = msg ? 'block' : 'none';
+        }
+      }
+      function setBtnLoading(id, loading) {
+        const b = el(id); if (!b) return;
+        if (!loading && !b.dataset.label) b.dataset.label = b.textContent;
+        if (loading && !b.dataset.label) b.dataset.label = b.textContent;
+        b.disabled = loading;
+        b.innerHTML = loading ? '<div class="spinner"></div>' : b.dataset.label;
+      }
 
-function filterCat(cat, btn) {
-  currentCat=cat;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderVault();
-}
+      function filterCat(cat, btn) {
+        currentCat = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderVault();
+      }
 
-function toggleEye(id, btn) {
-  const i=el(id); if(!i) return;
-  i.type=i.type==='password'?'text':'password';
-  btn.textContent=i.type==='password'?'👁':'🙈';
-}
+      function toggleEye(id, btn) {
+        const i = el(id); if (!i) return;
+        i.type = i.type === 'password' ? 'text' : 'password';
+        btn.textContent = i.type === 'password' ? '👁' : '🙈';
+      }
 
-function updateStrength(pw, fillId, labelId) {
-  let s=0;
-  if(pw.length>=8) s++; if(pw.length>=14) s++;
-  if(/[A-Z]/.test(pw)) s++; if(/[0-9]/.test(pw)) s++;
-  if(/[^A-Za-z0-9]/.test(pw)) s++;
-  const lvls=[
-    {pct:'8%',color:'#ff5f5f',label:'Very Weak'},
-    {pct:'28%',color:'#ff8c42',label:'Weak'},
-    {pct:'54%',color:'#ffd166',label:'Fair'},
-    {pct:'78%',color:'#06d6a0',label:'Strong'},
-    {pct:'100%',color:'#3dd68c',label:'Very Strong'},
-  ];
-  const l=lvls[Math.min(s,4)];
-  const f=el(fillId),lb=el(labelId);
-  if(f){f.style.width=l.pct;f.style.background=l.color;}
-  if(lb){lb.textContent=l.label;lb.style.color=l.color;}
-}
+      function updateStrength(pw, fillId, labelId) {
+        let s = 0;
+        if (pw.length >= 8) s++; if (pw.length >= 14) s++;
+        if (/[A-Z]/.test(pw)) s++; if (/[0-9]/.test(pw)) s++;
+        if (/[^A-Za-z0-9]/.test(pw)) s++;
+        const lvls = [
+          { pct: '8%', color: '#ff5f5f', label: 'Very Weak' },
+          { pct: '28%', color: '#ff8c42', label: 'Weak' },
+          { pct: '54%', color: '#ffd166', label: 'Fair' },
+          { pct: '78%', color: '#06d6a0', label: 'Strong' },
+          { pct: '100%', color: '#3dd68c', label: 'Very Strong' },
+        ];
+        const l = lvls[Math.min(s, 4)];
+        const f = el(fillId), lb = el(labelId);
+        if (f) { f.style.width = l.pct; f.style.background = l.color; }
+        if (lb) { lb.textContent = l.label; lb.style.color = l.color; }
+      }
 
-function fillGenerated() {
-  const len  = parseInt(el('g-len')?.value||'20');
-  const pw   = genPassword(len, el('g-upper')?.checked, el('g-num')?.checked, el('g-sym')?.checked);
-  el('e-secret').value = pw;
-  if(currentEntryType==='password') updateStrength(pw,'e-strength-fill','e-strength-label');
-  toast('⚡ Password generated!');
-}
+      function fillGenerated() {
+        const len = parseInt(el('g-len')?.value || '20');
+        const pw = genPassword(len, el('g-upper')?.checked, el('g-num')?.checked, el('g-sym')?.checked);
+        el('e-secret').value = pw;
+        if (currentEntryType === 'password') updateStrength(pw, 'e-strength-fill', 'e-strength-label');
+        toast('⚡ Password generated!');
+      }
 
-// OTP digit inputs builder
-function buildOTPInputs(containerId) {
-  const c = el(containerId); if(!c) return;
-  c.innerHTML = '';
-  for(let i=0;i<6;i++) {
-    const inp = document.createElement('input');
-    inp.className='otp-digit'; inp.maxLength=1; inp.type='text'; inp.inputMode='numeric';
-    inp.addEventListener('input', e => {
-      if(e.target.value && i<5) c.querySelectorAll('.otp-digit')[i+1]?.focus();
-    });
-    inp.addEventListener('keydown', e => {
-      if(e.key==='Backspace'&&!e.target.value&&i>0) c.querySelectorAll('.otp-digit')[i-1]?.focus();
-    });
-    inp.addEventListener('paste', e => {
-      e.preventDefault();
-      const text=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
-      const digits=c.querySelectorAll('.otp-digit');
-      [...text].forEach((ch,j)=>{ if(digits[j]) digits[j].value=ch; });
-      digits[Math.min(text.length,5)]?.focus();
-    });
-    c.appendChild(inp);
-  }
-}
-function getOTP(containerId) {
-  return [...el(containerId).querySelectorAll('.otp-digit')].map(i=>i.value).join('');
-}
+      // OTP digit inputs builder
+      function buildOTPInputs(containerId) {
+        const c = el(containerId); if (!c) return;
+        c.innerHTML = '';
+        for (let i = 0; i < 6; i++) {
+          const inp = document.createElement('input');
+          inp.className = 'otp-digit'; inp.maxLength = 1; inp.type = 'text'; inp.inputMode = 'numeric';
+          inp.addEventListener('input', e => {
+            if (e.target.value && i < 5) c.querySelectorAll('.otp-digit')[i + 1]?.focus();
+          });
+          inp.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !e.target.value && i > 0) c.querySelectorAll('.otp-digit')[i - 1]?.focus();
+          });
+          inp.addEventListener('paste', e => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            const digits = c.querySelectorAll('.otp-digit');
+            [...text].forEach((ch, j) => { if (digits[j]) digits[j].value = ch; });
+            digits[Math.min(text.length, 5)]?.focus();
+          });
+          c.appendChild(inp);
+        }
+      }
+      function getOTP(containerId) {
+        return [...el(containerId).querySelectorAll('.otp-digit')].map(i => i.value).join('');
+      }
 
-let toastTimer;
-function toast(msg) {
-  const t=el('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
-}
+      let toastTimer;
+      function toast(msg) {
+        const t = el('toast'); t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+      }
 
-document.getElementById('g-len').addEventListener('input', function() {
-  el('g-len-val').textContent=' '+this.value;
-});
+      document.getElementById('g-len').addEventListener('input', function () {
+        el('g-len-val').textContent = ' ' + this.value;
+      });
 
-// Keyboard shortcut
-document.addEventListener('keydown', e => {
-  if((e.ctrlKey||e.metaKey)&&e.key==='k') { e.preventDefault(); el('vault-search')?.focus(); }
-  if(e.key==='Escape') { closeEntryModal(); closeTOTPModal(); }
-});
+      // Keyboard shortcut
+      document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); el('vault-search')?.focus(); }
+        if (e.key === 'Escape') { closeEntryModal(); closeTOTPModal(); }
+      });
 
-// Auto-login if tokens exist
-(async()=>{
-  if(getAccessToken()) {
-    try { await afterLogin(); }
-    catch { clearTokens(); showPage('auth-page'); showAuthForm('login'); }
-  }
-})();
+      // Auto-login if tokens exist
+      (async () => {
+        if (getAccessToken()) {
+          try { await afterLogin(); }
+          catch { clearTokens(); showPage('auth-page'); showAuthForm('login'); }
+        }
+      })();
 
-// Expose functions to window because HTML onclick handlers need them
-window.showAuthForm = showAuthForm;
-window.register = register;
-window.verifyEmail = verifyEmail;
-window.resendVerification = resendVerification;
-window.login = login;
-window.verify2FA = verify2FA;
-window.setupMasterPassword = setupMasterPassword;
-window.confirmRecovery = confirmRecovery;
-window.unlockVault = unlockVault;
-window.lockMaster = lockMaster;
-window.showMasterReset = showMasterReset;
-window.sendMasterResetOTP = sendMasterResetOTP;
-window.resetMasterPassword = resetMasterPassword;
-window.filterCat = filterCat;
-window.showTOTPModal = showTOTPModal;
-window.closeTOTPModal = closeTOTPModal;
-window.confirmTOTP = confirmTOTP;
-window.forgotPasswordStep1 = forgotPasswordStep1;
-window.resetPassword = resetPassword;
-window.logout = logout;
-window.toggleEye = toggleEye;
-window.updateStrength = updateStrength;
-window.fillGenerated = fillGenerated;
-window.openEntryModal = openEntryModal;
-window.closeEntryModal = closeEntryModal;
-window.editEntry = editEntry;
-window.setEntryType = setEntryType;
-window.saveEntry = saveEntry;
-window.deleteEntry = deleteEntry;
-window.copySecret = copySecret;
-window.toggleReveal = toggleReveal;
-window.renderVault = renderVault;
-window.updateCounts = updateCounts;
-window.loadVault = loadVault;
-window.showMasterLock = showMasterLock;
-window.hideMasterLock = hideMasterLock;
-</script>
+      // Expose functions to window because HTML onclick handlers need them
+      window.showAuthForm = showAuthForm;
+      window.register = register;
+      window.verifyEmail = verifyEmail;
+      window.resendVerification = resendVerification;
+      window.login = login;
+      window.verify2FA = verify2FA;
+      window.setupMasterPassword = setupMasterPassword;
+      window.confirmRecovery = confirmRecovery;
+      window.unlockVault = unlockVault;
+      window.lockMaster = lockMaster;
+      window.showMasterReset = showMasterReset;
+      window.sendMasterResetOTP = sendMasterResetOTP;
+      window.resetMasterPassword = resetMasterPassword;
+      window.filterCat = filterCat;
+      window.showTOTPModal = showTOTPModal;
+      window.closeTOTPModal = closeTOTPModal;
+      window.confirmTOTP = confirmTOTP;
+      window.forgotPasswordStep1 = forgotPasswordStep1;
+      window.resetPassword = resetPassword;
+      window.logout = logout;
+      window.toggleEye = toggleEye;
+      window.updateStrength = updateStrength;
+      window.fillGenerated = fillGenerated;
+      window.openEntryModal = openEntryModal;
+      window.closeEntryModal = closeEntryModal;
+      window.editEntry = editEntry;
+      window.setEntryType = setEntryType;
+      window.saveEntry = saveEntry;
+      window.deleteEntry = deleteEntry;
+      window.copySecret = copySecret;
+      window.toggleReveal = toggleReveal;
+      window.renderVault = renderVault;
+      window.updateCounts = updateCounts;
+      window.loadVault = loadVault;
+      window.showMasterLock = showMasterLock;
+      window.hideMasterLock = hideMasterLock;
+    </script>
 </body>
+
 </html>
