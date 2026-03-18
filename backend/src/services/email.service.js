@@ -12,6 +12,10 @@ const transporter = nodemailer.createTransport({
   logger: true,
 });
 
+if (!process.env.EMAIL_FROM) {
+  console.warn('⚠️ EMAIL_FROM is missing! Resend and other providers will likely reject the email.');
+}
+
 // ── BASE TEMPLATE ──────────────────────────────────────
 const base = (content) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
